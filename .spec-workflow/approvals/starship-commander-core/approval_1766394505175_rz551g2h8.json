@@ -1,0 +1,12 @@
+{
+  "id": "approval_1766394505175_rz551g2h8",
+  "title": "Starship Commander 核心功能需求文档",
+  "filePath": ".spec-workflow/specs/starship-commander-core/requirements.md",
+  "type": "document",
+  "status": "rejected",
+  "createdAt": "2025-12-22T09:08:25.175Z",
+  "category": "spec",
+  "categoryName": "starship-commander-core",
+  "response": "暂不考虑安全相关问题",
+  "respondedAt": "2025-12-22T09:10:44.668Z"
+}

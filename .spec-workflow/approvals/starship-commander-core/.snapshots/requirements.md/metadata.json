@@ -1,0 +1,22 @@
+{
+  "filePath": ".spec-workflow/specs/starship-commander-core/requirements.md",
+  "currentVersion": 2,
+  "snapshots": [
+    {
+      "version": 1,
+      "filename": "snapshot-001.json",
+      "timestamp": "2025-12-22T09:08:25.182Z",
+      "trigger": "initial",
+      "approvalId": "approval_1766394505175_rz551g2h8",
+      "approvalTitle": "Starship Commander 核心功能需求文档"
+    },
+    {
+      "version": 2,
+      "filename": "snapshot-002.json",
+      "timestamp": "2025-12-22T09:12:00.146Z",
+      "trigger": "approved",
+      "approvalId": "approval_1766394664694_ng5l9jo79",
+      "approvalTitle": "Starship Commander 核心功能需求文档 (修订版)"
+    }
+  ]
+}

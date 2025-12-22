@@ -1,0 +1,12 @@
+{
+  "id": "approval_1766397490405_9qdjzmkpc",
+  "title": "Starship Commander 优先任务模块实施文档",
+  "filePath": ".spec-workflow/specs/starship-commander-core/tasks.md",
+  "type": "document",
+  "status": "rejected",
+  "createdAt": "2025-12-22T09:58:10.405Z",
+  "category": "spec",
+  "categoryName": "starship-commander-core",
+  "response": "每个任务都需要可视化的验收和测试",
+  "respondedAt": "2025-12-22T10:24:38.216Z"
+}

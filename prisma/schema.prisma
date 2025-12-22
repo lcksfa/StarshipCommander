@@ -1,0 +1,161 @@
+// Prisma configuration file
+// This file is used to configure the Prisma Client and Database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Mission model for task management
+model Mission {
+  id          String   @id @default(cuid())
+  title       Json     // Multi-language support: { en: string, zh: string }
+  description Json     // Multi-language support: { en: string, zh: string }
+  xpReward    Int
+  coinReward  Int
+  isCompleted Boolean  @default(false)
+  category    Category // STUDY | HEALTH | CHORE | CREATIVE (对应前端枚举)
+  emoji       String   // 任务图标
+  isDaily     Boolean  @default(false)
+  streak      Int      @default(0) // 连续完成天数
+  isActive    Boolean  @default(true)
+  difficulty  Difficulty
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userProgress UserProgress[]
+  userMissions UserMission[]
+}
+
+// User progress tracking
+model UserProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  missionId String
+  completed Boolean  @default(false)
+  completedAt DateTime?
+  streak    Int      @default(0)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+}
+
+// User mission association - 支持用户自定义任务和任务完成状态
+model UserMission {
+  id           String    @id @default(cuid())
+  userId       String
+  missionId    String
+  isCompleted  Boolean   @default(false)
+  completedAt  DateTime?
+  streak       Int       @default(0)
+  lastCompleted DateTime?
+  cooldownUntil DateTime? // 冷却结束时间
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  mission Mission @relation(fields: [missionId], references: [id])
+
+  @@unique([userId, missionId])
+}
+
+// Mission history records - 支持 CaptainsLog 组件
+model MissionHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  missionId     String
+  missionTitle  Json     // 任务标题快照（支持多语言）
+  xpEarned      Int
+  coinEarned    Int
+  category      Category
+  timestamp     DateTime @default(now())
+
+  userStats     UserStats @relation(fields: [userId], references: [id])
+}
+
+// User statistics and achievements
+model UserStats {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  level              Int      @default(1)
+  currentXp          Int      @default(0)
+  maxXp              Int      @default(100)
+  coins              Int      @default(0)
+  totalMissionsCompleted Int   @default(0)
+  totalXpEarned      Int      @default(0)
+  currentStreak      Int      @default(0)
+  longestStreak      Int      @default(0)
+  rank               Rank     @default(CADET)
+  lastActive         DateTime @default(now())
+  preferredLang      String   @default("en") // en | zh
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  achievements UserAchievement[]
+  missionHistory MissionHistory[]
+}
+
+// Achievements
+model Achievement {
+  id          String       @id @default(cuid())
+  title       Json         // Multi-language
+  description Json         // Multi-language
+  icon        String
+  condition   Json         // Achievement conditions
+  rarity      Rarity
+  isHidden    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  userAchievements UserAchievement[]
+}
+
+// User achievements
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  progress      Json     // Progress data
+  userStatsId   String   // Foreign key to UserStats
+
+  // Relations
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  userStats    UserStats @relation(fields: [userStatsId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum Category {
+  STUDY     // 学习类 (对应前端 study)
+  HEALTH    // 健康类 (对应前端 health)
+  CHORE     // 家务类 (对应前端 chore)
+  CREATIVE  // 创意类 (对应前端 creative)
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Rank {
+  CADET
+  LIEUTENANT
+  CAPTAIN
+  COMMANDER
+}
+
+enum Rarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}

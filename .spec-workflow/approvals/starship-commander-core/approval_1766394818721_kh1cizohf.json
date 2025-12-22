@@ -1,0 +1,12 @@
+{
+  "id": "approval_1766394818721_kh1cizohf",
+  "title": "Starship Commander 核心功能技术设计文档",
+  "filePath": ".spec-workflow/specs/starship-commander-core/design.md",
+  "type": "document",
+  "status": "rejected",
+  "createdAt": "2025-12-22T09:13:38.721Z",
+  "category": "spec",
+  "categoryName": "starship-commander-core",
+  "response": "前端代码已经基本写好了，请重点适配后端代码和数据模式设计",
+  "respondedAt": "2025-12-22T09:49:20.717Z"
+}

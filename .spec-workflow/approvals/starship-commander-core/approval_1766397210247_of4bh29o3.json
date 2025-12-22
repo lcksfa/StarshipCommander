@@ -1,0 +1,12 @@
+{
+  "id": "approval_1766397210247_of4bh29o3",
+  "title": "Starship Commander 实施任务分解文档",
+  "filePath": ".spec-workflow/specs/starship-commander-core/tasks.md",
+  "type": "document",
+  "status": "rejected",
+  "createdAt": "2025-12-22T09:53:30.247Z",
+  "category": "spec",
+  "categoryName": "starship-commander-core",
+  "response": "使用中文，且优先实现任务模块和历史记录模块的后台交互，需要设计前后端联调任务",
+  "respondedAt": "2025-12-22T09:54:36.207Z"
+}

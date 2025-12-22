@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Starship Commander</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Nunito:wght@400;700;900&display=swap"
+            rel="stylesheet"
+        />
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: [
+                                "Fredoka",
+                                "Nunito",
+                                "PingFang SC",
+                                "Microsoft YaHei",
+                                "sans-serif",
+                            ],
+                        },
+                        colors: {
+                            space: {
+                                950: "#020617",
+                                900: "#0f172a",
+                            },
+                            neon: {
+                                cyan: "#22d3ee",
+                                gold: "#facc15",
+                                orange: "#fb923c",
+                                purple: "#c084fc",
+                                green: "#4ade80",
+                                rose: "#fb7185",
+                                blue: "#60a5fa",
+                            },
+                        },
+                        animation: {
+                            float: "float 6s ease-in-out infinite",
+                            "pulse-glow":
+                                "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                            "pulse-slow":
+                                "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                            stripes: "stripes 1s linear infinite",
+                            "bounce-slow": "bounce 3s infinite",
+                        },
+                        keyframes: {
+                            float: {
+                                "0%, 100%": { transform: "translateY(0)" },
+                                "50%": { transform: "translateY(-10px)" },
+                            },
+                            "pulse-glow": {
+                                "0%, 100%": {
+                                    opacity: 1,
+                                    boxShadow:
+                                        "0 0 20px rgba(34, 211, 238, 0.5)",
+                                },
+                                "50%": {
+                                    opacity: 0.8,
+                                    boxShadow:
+                                        "0 0 10px rgba(34, 211, 238, 0.2)",
+                                },
+                            },
+                            stripes: {
+                                "0%": { backgroundPosition: "0 0" },
+                                "100%": { backgroundPosition: "1rem 1rem" },
+                            },
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden; /* Prevent body scroll, handle inside App */
+                background-color: #000;
+                height: 100vh;
+                width: 100vw;
+            }
+
+            /* Enforce Chunky Weights for sci-fi feel, especially for Chinese */
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            button,
+            .font-bold {
+                font-weight: 700 !important;
+            }
+
+            /* Custom Scrollbar for the mission list */
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+            }
+            ::-webkit-scrollbar-thumb {
+                background: rgba(34, 211, 238, 0.3);
+                border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(34, 211, 238, 0.5);
+            }
+
+            /* Energy Bar Stripes */
+            .bg-stripes {
+                background-image: linear-gradient(
+                    45deg,
+                    rgba(255, 255, 255, 0.15) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255, 255, 255, 0.15) 50%,
+                    rgba(255, 255, 255, 0.15) 75%,
+                    transparent 75%,
+                    transparent
+                );
+                background-size: 1rem 1rem;
+            }
+        </style>
+        <script type="importmap">
+            {
+                "imports": {
+                    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+                    "react/": "https://esm.sh/react@^19.2.3/",
+                    "react": "https://esm.sh/react@^19.2.3",
+                    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+                }
+            }
+        </script>
+        <link rel="stylesheet" href="/index.css" />
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/src/frontend/index.tsx"></script>
+    </body>
+</html>

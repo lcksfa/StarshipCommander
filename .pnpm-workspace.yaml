@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+# pnpm workspace configuration
+# Enables monorepo support with workspace packages
+
+# Explicitly set workspace directory structure
+packages:
+  - '.'
+  - 'src/frontend/**'
+  - 'src/backend/**'
+  - 'frontend/**'
+  - 'backend/**'
+
+# Enable strict peer dependencies
+strict-peer-dependencies: false
+
+# Configure shamefully-hoist for compatibility
+shamefully-hoist: true
+
+# Store directory
+store-dir: ~/.pnpm-store
+
+# Registry configuration
+registry: 'https://registry.npmjs.org'
+
+# Auto install peers
+auto-install-peers: true
