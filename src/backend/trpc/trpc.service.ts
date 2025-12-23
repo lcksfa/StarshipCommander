@@ -7,8 +7,12 @@ import { PrismaService } from "../database/prisma.service.js";
 
 // 创建上下文类型
 export type CreateContextOptions = {
-  req?: any; // Express Request 对象
-  res?: any; // Express Response 对象
+  req?: {
+    headers?: Record<string, string | string[] | undefined>;
+  }; // Express Request 对象 (简化类型)
+  res?: {
+    status?: (code: number) => void;
+  }; // Express Response 对象 (简化类型)
 };
 
 /**
@@ -115,7 +119,7 @@ export class TrpcService {
   /**
    * 创建完整的路由器
    */
-  createRouter(missionsRouter: any) {
+  createRouter(missionsRouter: ReturnType<typeof router>) {
     return this.router({
       health: this.healthProcedure,
       missions: missionsRouter,

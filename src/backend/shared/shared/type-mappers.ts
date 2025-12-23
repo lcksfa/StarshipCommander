@@ -136,10 +136,13 @@ export function getLocalizedText(
  * 验证本地化文本结构
  * Validate localized text structure
  */
-export function isValidLocalizedText(text: any): text is LocalizedText {
+export function isValidLocalizedText(text: unknown): text is LocalizedText {
   return (
-    text &&
+    text !== null &&
+    text !== undefined &&
     typeof text === "object" &&
+    "en" in text &&
+    "zh" in text &&
     typeof text.en === "string" &&
     typeof text.zh === "string"
   );

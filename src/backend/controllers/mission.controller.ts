@@ -7,11 +7,12 @@ import {
   ApiQuery,
   ApiBody,
 } from "@nestjs/swagger";
+import type { MissionService } from "../services/mission.service.js";
 
 // 全局 service 实例（从 main.ts 设置）
-let missionServiceInstance: any = null;
+let missionServiceInstance: MissionService | null = null;
 
-export function setMissionService(instance: any) {
+export function setMissionService(instance: MissionService) {
   missionServiceInstance = instance;
 }
 
@@ -46,11 +47,11 @@ export class MissionController {
     @Query("isActive") isActive?: string,
     @Query("difficulty") difficulty?: string,
   ) {
-    const filters: any = {};
-    if (category) filters.category = category;
+    const filters: Parameters<MissionService["getAllMissions"]>[0] = {};
+    if (category) filters.category = category as any;
     if (isDaily !== undefined) filters.isDaily = isDaily === "true";
     if (isActive !== undefined) filters.isActive = isActive === "true";
-    if (difficulty) filters.difficulty = difficulty;
+    if (difficulty) filters.difficulty = difficulty as any;
 
     const missions = await this.missionService.getAllMissions(filters);
     return {
@@ -102,10 +103,11 @@ export class MissionController {
         data: result,
         message: result.message,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       return {
         success: false,
-        error: error.message,
+        error: message,
       };
     }
   }
@@ -149,10 +151,11 @@ export class MissionController {
         success: true,
         data: stats,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       return {
         success: false,
-        error: error.message,
+        error: message,
       };
     }
   }
@@ -188,10 +191,11 @@ export class HistoryController {
         success: true,
         data: stats,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       return {
         success: false,
-        error: error.message,
+        error: message,
       };
     }
   }

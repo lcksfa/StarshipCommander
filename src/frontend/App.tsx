@@ -8,6 +8,7 @@ import Hologram from "./components/Hologram";
 import AddMissionModal from "./components/AddMissionModal";
 import CaptainsLog from "./components/CaptainsLog";
 import SuccessOverlay from "./components/SuccessOverlay";
+import { Toaster, toast } from "sonner";
 import { Tab, MissionCategory } from "./types";
 import { INITIAL_STATS } from "./constants";
 import { useAllMissions, useUserStats } from "./hooks/useMissions";
@@ -26,6 +27,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useLanguage } from "./contexts/LanguageContext";
+import { getErrorMessage, getErrorTitle, logError } from "./utils/error-utils";
 
 const App: React.FC = () => {
   const { language, t } = useLanguage();
@@ -136,6 +138,11 @@ const App: React.FC = () => {
     emoji: string;
     isDaily: boolean;
   }) => {
+    // 显示加载提示 / Show loading toast
+    const loadingToast = toast.loading(
+      language === "zh" ? "正在创建任务..." : "Creating mission..."
+    );
+
     try {
       // 调用 API 创建任务 / Call API to create mission
       await apiClient.createMission({
@@ -149,14 +156,38 @@ const App: React.FC = () => {
         difficulty: missionData.difficulty.toUpperCase() as "EASY" | "MEDIUM" | "HARD",
       });
 
+      // 成功提示 / Success toast
+      toast.success(
+        language === "zh" ? "任务创建成功！" : "Mission created successfully!",
+        {
+          id: loadingToast,
+          description:
+            language === "zh"
+              ? `"${missionData.title}" 已添加到您的任务列表`
+              : `"${missionData.title}" has been added to your mission list`,
+          duration: 4000,
+        }
+      );
+
       // 关闭模态框并刷新任务列表
       // Close modal and refresh mission list
       setIsModalOpen(false);
       await refetchMissions();
     } catch (error) {
-      // 错误处理 / Error handling
-      console.error("Failed to create mission:", error);
-      // TODO: 显示错误提示给用户 / Show error message to user
+      // 错误提示 / Error toast
+      const errorMessage = getErrorMessage(error);
+      const errorTitle = getErrorTitle(error);
+
+      logError("handleAddMission", error, { missionData });
+
+      toast.error(errorTitle, {
+        id: loadingToast,
+        description: errorMessage,
+        action: {
+          label: language === "zh" ? "重试" : "Retry",
+          onClick: () => handleAddMission(missionData),
+        },
+      });
     }
   };
 
@@ -577,6 +608,23 @@ const App: React.FC = () => {
     <div className="relative min-h-screen font-sans text-slate-100 overflow-hidden select-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-900 to-black flex">
       <StarBackground />
       <Hologram />
+
+      {/* Toast 通知组件 / Toast notification component */}
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        duration={4000}
+        toastOptions={{
+          style: {
+            background: "rgba(15, 23, 42, 0.9)",
+            color: "#f1f5f9",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            backdropFilter: "blur(12px)",
+          },
+          className: "font-sans",
+        }}
+      />
 
       {/* Sidebar - Desktop Only */}
       <Sidebar

@@ -26,6 +26,14 @@ import {
   mapFrontendToDbCategory,
   mapDbToFrontendCategory,
 } from "../shared/shared/type-mappers.js";
+import {
+  MissionWhereInput,
+  MissionUpdateData,
+  UserMissionWhereInput,
+  MissionHistoryWhereInput,
+  DbMissionWithRelations,
+  DbUserStats,
+} from "../types/prisma.types.js";
 
 /**
  * 从错误对象中提取错误消息
@@ -52,6 +60,36 @@ export class MissionService {
   async connect() {
     await this.prisma.$connect();
     console.log("✅ MissionService: Database connected");
+  }
+
+  /**
+   * 查找重复任务 / Find duplicate mission
+   * 检查是否存在相同标题和类别的活跃任务
+   * Check if there's an active mission with the same title and category
+   */
+  async findDuplicate(params: {
+    title: string;
+    userId?: string;
+    isActive?: boolean;
+  }): Promise<Mission | null> {
+    try {
+      const where: MissionWhereInput = {
+        title: params.title.trim(),
+        isActive: params.isActive ?? true,
+      };
+
+      const dbMission = await this.prisma.mission.findFirst({
+        where,
+      });
+
+      return dbMission ? this.mapDbMissionToFrontend(dbMission) : null;
+    } catch (error) {
+      throw new ServiceError(
+        `Failed to find duplicate mission: ${getErrorMessage(error)}`,
+        "FIND_DUPLICATE_ERROR",
+        500,
+      );
+    }
   }
 
   /**
@@ -119,7 +157,7 @@ export class MissionService {
     userId?: string; // 添加 userId 参数以获取用户特定的完成状态
   }): Promise<Mission[]> {
     try {
-      const where: any = {};
+      const where: MissionWhereInput = {};
 
       if (filters?.category) {
         where.category = mapFrontendToDbCategory(filters.category);
@@ -178,7 +216,7 @@ export class MissionService {
         throw new NotFoundException(`Mission with id ${id} not found`);
       }
 
-      const updateData: any = {};
+      const updateData: MissionUpdateData = {};
 
       if (input.title) updateData.title = input.title;
       if (input.description) updateData.description = input.description;
@@ -444,7 +482,7 @@ export class MissionService {
     filters?: UserMissionFilters,
   ): Promise<any[]> {
     try {
-      const where: any = {
+      const where: UserMissionWhereInput = {
         userId,
       };
 
@@ -618,7 +656,7 @@ export class MissionService {
     },
   ): Promise<LogEntry[]> {
     try {
-      const where: any = {
+      const where: MissionHistoryWhereInput = {
         userId,
       };
 
@@ -642,12 +680,11 @@ export class MissionService {
       });
 
       // 转换为前端 LogEntry 格式 / Convert to frontend LogEntry format
-      return historyData.map((entry) => {
-        // 导入 LogEntry 类型或临时定义
-        const logEntry: any = {
+      return historyData.map((entry): LogEntry => {
+        return {
           id: entry.id,
           missionId: entry.missionId,
-          missionTitle: entry.mission?.title || "Unknown Mission", // 使用任务的 title / Use mission title
+          missionTitle: entry.mission?.title || "Unknown Mission",
           xpEarned: entry.xpEarned,
           coinEarned: entry.coinEarned,
           timestamp: entry.completedAt.getTime(),
@@ -655,7 +692,6 @@ export class MissionService {
             ? mapDbToFrontendCategory(entry.mission.category)
             : "study",
         };
-        return logEntry;
       });
     } catch (error) {
       throw new ServiceError(
@@ -693,10 +729,13 @@ export class MissionService {
    * 辅助方法：数据库任务对象转换为前端任务对象
    * Helper method: Convert database mission object to frontend mission object
    */
-  private mapDbMissionToFrontend(dbMission: any, userId?: string): Mission {
+  private mapDbMissionToFrontend(
+    dbMission: DbMissionWithRelations,
+    userId?: string
+  ): Mission {
     // 如果提供了 userId，从 UserMission 表中获取用户的完成状态
-    let isCompleted = dbMission.isCompleted;
-    let streak = dbMission.streak || 0;
+    let isCompleted = false;
+    let streak = 0;
 
     if (userId && dbMission.userMissions && dbMission.userMissions.length > 0) {
       const userMission = dbMission.userMissions[0];
@@ -721,19 +760,19 @@ export class MissionService {
   /**
    * 辅助方法：数据库用户统计转换为前端用户统计
    */
-  private mapDbUserStatsToFrontend(dbUserStats: any): UserStats {
+  private mapDbUserStatsToFrontend(dbUserStats: DbUserStats): UserStats {
     return {
       level: dbUserStats.level,
       currentXp: dbUserStats.currentXp,
       maxXp: dbUserStats.maxXp,
       coins: dbUserStats.coins,
-      rank: dbUserStats.rank,
+      rank: "", // rank 字段不在 Prisma schema 中，使用空字符串作为默认值
       totalMissionsCompleted: dbUserStats.totalMissionsCompleted,
       totalXpEarned: dbUserStats.totalXpEarned,
       preferredLang: dbUserStats.preferredLang,
       currentStreak: dbUserStats.currentStreak,
       longestStreak: dbUserStats.longestStreak,
-      lastActive: dbUserStats.lastActive,
+      lastActive: dbUserStats.lastActive || undefined,
     };
   }
 

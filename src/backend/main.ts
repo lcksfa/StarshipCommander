@@ -6,9 +6,11 @@ import { AppModule } from "./app.module";
 import { MissionService } from "./services/mission.service";
 import { PrismaService } from "./database/prisma.service";
 import { setMissionService } from "./controllers/mission.controller";
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import * as expressAdapter from "@trpc/server/adapters/express";
 import { z } from "zod";
+import { createContext, type Context } from "./context";
+import { createMissionSchema } from "./validation/mission-validation";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -51,24 +53,33 @@ async function bootstrap() {
   // 设置 MissionService 实例到 Controller（避免依赖注入问题）
   setMissionService(missionService);
 
-  // 创建 tRPC 实例
-  const t = initTRPC.create();
+  // 创建 tRPC 实例 with context type / 创建带类型的 tRPC 实例
+  const t = initTRPC.context<Context>().create();
 
   const procedure = t.procedure;
   const router = t.router;
 
+  // 创建受保护的 procedure（需要身份验证） / Create protected procedure (requires authentication)
+  const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+    if (!ctx.user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to perform this action",
+      });
+    }
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user, // TypeScript now knows user exists / TypeScript 现在知道 user 存在
+      },
+    });
+  });
+
   // 定义 Zod schemas
   const schemas = {
-    createMission: z.object({
-      title: z.string().min(1),
-      description: z.string().min(1),
-      xpReward: z.number().min(0).max(1000),
-      coinReward: z.number().min(0).max(500),
-      category: z.enum(["study", "health", "chore", "creative"]),
-      emoji: z.string().min(1).max(10),
-      isDaily: z.boolean(),
-      difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
-    }),
+    // Use enhanced validation schema with business rules
+    // 使用带有业务规则的增强验证 schema
+    createMission: createMissionSchema,
 
     getMissions: z.object({
       userId: z.string().min(1).optional(),
@@ -123,18 +134,47 @@ async function bootstrap() {
     })),
 
     missions: router({
-      createMission: procedure
+      createMission: protectedProcedure
         .input(schemas.createMission)
-        .mutation(async ({ input }) => {
-          try {
-            const mission = await missionService.createMission(input);
+        .mutation(
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          async ({ input, ctx }) => {
+            // ctx.user is guaranteed to exist here by protectedProcedure
+            // ctx.user 在这里由 protectedProcedure 保证存在
+            // TODO: Track who created this mission by adding 'createdBy' field to Mission model
+            // TODO：通过在 Mission 模型中添加 'createdBy' 字段来追踪任务创建者
+            try {
+              // 检查重复任务 / Check for duplicate mission
+              const existing = await missionService.findDuplicate({
+                title: input.title,
+                isActive: true,
+              });
+
+              if (existing) {
+                throw new TRPCError({
+                  code: "CONFLICT",
+                  message: `An active mission with title "${input.title}" already exists / 标题为 "${input.title}" 的活跃任务已存在`,
+                });
+              }
+
+              const mission = await missionService.createMission({
+                ...input,
+              });
             return {
               success: true,
               data: mission,
               message: "Mission created successfully",
             };
-          } catch (error: any) {
-            throw new Error(`Failed to create mission: ${error.message}`);
+          } catch (error: unknown) {
+            // Re-throw TRPCError as-is / 直接重新抛出 TRPCError
+            if (error instanceof TRPCError && error.code === "CONFLICT") {
+              throw error;
+            }
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Failed to create mission: ${message}`,
+            });
           }
         }),
 
@@ -148,8 +188,9 @@ async function bootstrap() {
               data: missions,
               count: missions.length,
             };
-          } catch (error: any) {
-            throw new Error(`Failed to get missions: ${error.message}`);
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error(`Failed to get missions: ${message}`);
           }
         }),
 
@@ -165,8 +206,9 @@ async function bootstrap() {
               success: true,
               data: mission,
             };
-          } catch (error: any) {
-            throw new Error(`Failed to get mission: ${error.message}`);
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error(`Failed to get mission: ${message}`);
           }
         }),
 
@@ -183,8 +225,9 @@ async function bootstrap() {
               data: result,
               message: result.message,
             };
-          } catch (error: any) {
-            throw new Error(`Failed to complete mission: ${error.message}`);
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error(`Failed to complete mission: ${message}`);
           }
         }),
 
@@ -200,8 +243,9 @@ async function bootstrap() {
               data: missions,
               count: missions.length,
             };
-          } catch (error: any) {
-            throw new Error(`Failed to get daily missions: ${error.message}`);
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error(`Failed to get daily missions: ${message}`);
           }
         }),
 
@@ -217,8 +261,9 @@ async function bootstrap() {
               success: true,
               data: stats,
             };
-          } catch (error: any) {
-            throw new Error(`Failed to get mission stats: ${error.message}`);
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error(`Failed to get mission stats: ${message}`);
           }
         }),
     }),
@@ -240,8 +285,9 @@ async function bootstrap() {
               data: history,
               count: history.length,
             };
-          } catch (error: any) {
-            throw new Error(`Failed to get user history: ${error.message}`);
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error(`Failed to get user history: ${message}`);
           }
         }),
     }),
@@ -261,22 +307,29 @@ async function bootstrap() {
               success: true,
               data: stats,
             };
-          } catch (error: any) {
-            throw new Error(`Failed to get user stats: ${error.message}`);
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error(`Failed to get user stats: ${message}`);
           }
         }),
     }),
   });
 
   // Mount tRPC middleware - 使用已连接的 Prisma 实例创建上下文
+  // Mount tRPC middleware - Use connected Prisma instance and create context
   app.use(
     "/trpc",
     expressAdapter.createExpressMiddleware({
       router: appRouter,
-      createContext: async () => ({
-        prisma: prismaService, // 使用已连接的 PrismaService 实例
-        user: null,
-      }),
+      createContext: async (opts) => {
+        // Use our createContext function and add prisma to context
+        // 使用我们的 createContext 函数并添加 prisma 到上下文
+        const context = await createContext(opts);
+        return {
+          ...context,
+          prisma: prismaService, // Add PrismaService for use in procedures / 添加 PrismaService 供 procedures 使用
+        };
+      },
     }),
   );
 

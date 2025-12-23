@@ -13,9 +13,53 @@ import { test, expect } from "@playwright/test";
 
 const BASE_URL = "http://localhost:5173";
 const API_BASE = "http://localhost:3001";
-const TEST_USER_ID = "user-123";
+// 使用前端默认用户 ID，确保测试用户存在
+const TEST_USER_ID = "user_10_1766463362298_8tjuvr";
 
 test.describe("任务完成流程测试", () => {
+  // 在所有测试前创建测试用户数据
+  test.beforeAll(async ({ request }) => {
+    // 创建一个测试任务
+    const createResponse = await request.post(`${API_BASE}/trpc/missions.createMission`, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-id": TEST_USER_ID,
+      },
+      data: JSON.stringify({
+        title: {
+          en: `E2E Test Setup_${Date.now()}`,
+          zh: `E2E 测试初始化_${Date.now()}`,
+        },
+        description: {
+          en: "Mission to create test user stats",
+          zh: "用于创建测试用户统计的任务",
+        },
+        xpReward: 10,
+        coinReward: 5,
+        category: "study",
+        emoji: "🚀",
+        isDaily: false,
+        difficulty: "EASY",
+      }),
+    });
+
+    if (createResponse.ok()) {
+      const missionData = await createResponse.json();
+      if (missionData.result?.data?.id) {
+        // 完成任务以创建用户统计
+        await request.post(`${API_BASE}/trpc/missions.completeMission`, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify({
+            missionId: missionData.result.data.id,
+            userId: TEST_USER_ID,
+          }),
+        });
+      }
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     // 每个测试前导航到应用首页
     await page.goto(BASE_URL);
@@ -31,10 +75,13 @@ test.describe("任务完成流程测试", () => {
     const levelElement = page.locator("text=/Level \\d+/");
     await expect(levelElement).toBeVisible();
 
-    const xpElement = page.locator("text=/\\d+\\/\\d+ XP/");
+    // 修复：XP 格式为 "240 / 100 XP"（带空格）
+    const xpElement = page.locator("text=/\\d+\\s\\/\\s\\d+\\s+XP/");
     await expect(xpElement).toBeVisible();
 
-    const coinsElement = page.locator("text=/\\d+ \\u{1F6B2}/"); // 金币符号
+    // 验证金币显示（使用 Coins 图标组件）
+    // 修复：需要定位到 HUD 中的 Coins 图标，而不是任务卡片中的
+    const coinsElement = page.locator(".text-neon-gold.font-black").locator("svg.lucide-coins").first();
     await expect(coinsElement).toBeVisible();
 
     console.log("✅ 应用加载成功，用户数据正常显示");
@@ -55,8 +102,9 @@ test.describe("任务完成流程测试", () => {
     // 验证任务卡片包含必要信息
     const firstCard = missionCards.first();
     await expect(firstCard.locator("h3")).toBeVisible(); // 任务标题
-    await expect(firstCard.locator("text=/XP/")).toBeVisible(); // XP 奖励
-    await expect(firstCard.locator("text=/\\u{1F6B2}/")).toBeVisible(); // 金币奖励
+    // 修复：XP 显示为数字，没有 "XP" 文本，验证 Zap 图标存在
+    await expect(firstCard.locator("svg.lucide-zap")).toBeVisible(); // XP 奖励图标
+    await expect(firstCard.locator("svg.lucide-coins")).toBeVisible(); // 金币奖励
 
     console.log("✅ 任务卡片显示正常");
   });
@@ -64,8 +112,11 @@ test.describe("任务完成流程测试", () => {
   test("测试3：完成任务的完整流程", async ({ page }) => {
     // 获取用户初始状态
     const initialLevel = await page.locator("text=/Level (\\d+)/").first().textContent();
-    const initialXP = await page.locator("text=/(\\d+)\\/\\d+ XP/").first().textContent();
-    const initialCoins = await page.locator("text=/(\\d+) \\u{1F6B2}/").first().textContent();
+    const initialXP = await page.locator("text=/\\d+\\s\\/\\s\\d+\\s+XP/").first().textContent();
+
+    // 金币使用 Coins 图标，查找包含金币数值的元素
+    const coinsContainer = page.locator(".text-neon-gold.font-black").first();
+    const initialCoins = await coinsContainer.textContent();
 
     console.log(`初始状态 - Level: ${initialLevel}, XP: ${initialXP}, Coins: ${initialCoins}`);
 
@@ -75,14 +126,16 @@ test.describe("任务完成流程测试", () => {
 
     // 获取任务信息
     const missionTitle = await firstCard.locator("h3").textContent();
-    const missionXP = await firstCard.locator("text=/(\\d+) XP/").first().textContent();
-    const missionCoins = await firstCard.locator("text=/(\\d+) \\u{1F6B2}/").first().textContent();
+    // 修复：任务卡片中 XP 只是数字，没有单位文本
+    const missionXP = await firstCard.locator("svg.lucide-zap").locator("xpath=..").textContent();
+    // 任务卡片中的金币图标旁的数值
+    const missionCoins = await firstCard.locator(".text-neon-gold").first().textContent();
 
     console.log(`准备完成任务: ${missionTitle}`);
     console.log(`奖励: ${missionXP}, ${missionCoins}`);
 
-    // 点击完成任务按钮
-    const completeButton = firstCard.locator('button:has-text("LAUNCH")');
+    // 点击完成任务按钮（使用英文 ENGAGE 或中文 执行）
+    const completeButton = firstCard.locator('button').filter({ hasText: /(ENGAGE|执行)/ });
     await expect(completeButton).toBeVisible();
     await completeButton.click();
 
@@ -113,7 +166,8 @@ test.describe("任务完成流程测试", () => {
     const firstCard = missionCards.first();
     const missionTitle = await firstCard.locator("h3").textContent();
 
-    const completeButton = firstCard.locator('button:has-text("LAUNCH")');
+    // 修复：使用 ENGAGE 或 执行 按钮选择器
+    const completeButton = firstCard.locator('button').filter({ hasText: /(ENGAGE|执行)/ });
     if (await completeButton.isVisible()) {
       await completeButton.click();
       await page.waitForTimeout(2000);
@@ -132,17 +186,20 @@ test.describe("任务完成流程测试", () => {
   });
 
   test("测试5：验证数据库状态一致性", async ({ page, request }) => {
+    // 注意：用户已在 beforeAll 钩子中创建，这里直接验证数据
+
     // 通过 API 获取用户数据
-    const statsResponse = await request.get(`${API_BASE}/trpc/user.getUserStats?input=${encodeURIComponent(JSON.stringify({ userId: TEST_USER_ID }))}`);
+    const statsResponse = await request.get(`${API_BASE}/trpc/users.getUserStats?input=${encodeURIComponent(JSON.stringify({ userId: TEST_USER_ID }))}`);
 
     expect(statsResponse.ok()).toBeTruthy();
     const statsData = await statsResponse.json();
 
-    // 验证用户统计结构
+    // 修复：tRPC 响应结构为 { result: { data: { success: true, data: {...} } } }
     expect(statsData).toHaveProperty("result");
     expect(statsData.result).toHaveProperty("data");
 
-    const userStats = statsData.result.data;
+    const result = statsData.result.data;
+    const userStats = result.data; // 双重嵌套
     expect(userStats).toHaveProperty("level");
     expect(userStats).toHaveProperty("currentXp");
     expect(userStats).toHaveProperty("coins");
@@ -160,8 +217,10 @@ test.describe("任务完成流程测试", () => {
     expect(missionsResponse.ok()).toBeTruthy();
     const missionsData = await missionsResponse.json();
 
+    // 修复：tRPC 响应结构为 { result: { data: { success: true, data: [...] } } }
     expect(missionsData.result).toHaveProperty("data");
-    const missions = missionsData.result.data;
+    const missionsResult = missionsData.result.data;
+    const missions = missionsResult.data; // 双重嵌套
     expect(Array.isArray(missions)).toBeTruthy();
     expect(missions.length).toBeGreaterThan(0);
 

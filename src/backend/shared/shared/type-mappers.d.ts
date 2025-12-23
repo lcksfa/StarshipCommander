@@ -26,5 +26,5 @@ export declare function getLocalizedText(
   text: LocalizedText,
   language?: "en" | "zh",
 ): string;
-export declare function isValidLocalizedText(text: any): text is LocalizedText;
+export declare function isValidLocalizedText(text: unknown): text is LocalizedText;
 //# sourceMappingURL=type-mappers.d.ts.map

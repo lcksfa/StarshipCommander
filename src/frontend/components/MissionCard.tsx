@@ -59,6 +59,7 @@ const MissionCard: React.FC<MissionCardProps> = ({
 
   return (
     <div
+      data-testid="mission-card"
       className={`
         relative group rounded-[2rem] p-1.5 transition-all duration-300 transform
         border backdrop-blur-md h-full flex flex-col min-h-[200px]
