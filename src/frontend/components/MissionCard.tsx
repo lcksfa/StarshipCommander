@@ -20,19 +20,6 @@ interface MissionCardProps {
 const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
   const { language, t } = useLanguage();
   const { completeMission, isLoading } = useCompleteMission();
-  const [localCompleted, setLocalCompleted] = React.useState(
-    mission.isCompleted,
-  );
-  const [completionError, setCompletionError] = React.useState<string | null>(
-    null,
-  );
-
-  // 当 mission prop 变化时,如果 mission.isCompleted 为 true,则同步更新本地状态
-  React.useEffect(() => {
-    if (mission.isCompleted) {
-      setLocalCompleted(true);
-    }
-  }, [mission.isCompleted]);
 
   const categoryConfig = {
     health: { label: t.cat_body, color: "text-rose-400" },
@@ -42,22 +29,16 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
   };
 
   const config = categoryConfig[mission.category] || categoryConfig.study;
-  const isProcessing = isLoading || (localCompleted && !mission.isCompleted);
 
   const handleComplete = async () => {
-    if (localCompleted) return;
-
-    setCompletionError(null);
+    if (mission.isCompleted) return;
 
     try {
       // TODO: 替换为真实的 userId
       const userId = "user-123";
       const result = await completeMission(mission.id, userId);
 
-      // 更新本地状态
-      setLocalCompleted(true);
-
-      // 触发父组件回调
+      // 触发父组件回调以刷新数据
       onComplete(mission.id);
 
       // 显示成功消息
@@ -68,7 +49,6 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
 
-      setCompletionError(errorMessage);
       // eslint-disable-next-line no-console
       console.error("Failed to complete mission:", error);
 
@@ -85,7 +65,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
         relative group rounded-[2rem] p-1.5 transition-all duration-300 transform
         border backdrop-blur-md h-full flex flex-col min-h-[200px]
         ${
-          localCompleted && !mission.isDaily
+          mission.isCompleted && !mission.isDaily
             ? "bg-white/10 border-neon-green shadow-[0_0_15px_rgba(74,222,128,0.2)] scale-[0.98]"
             : "bg-white/10 border-white/20 hover:border-white/40 hover:-translate-y-1 hover:shadow-lg"
         }
@@ -94,16 +74,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
       <div
         className={`
           flex flex-col h-full p-5 rounded-[1.7rem] relative overflow-hidden
-          ${localCompleted && !mission.isDaily ? "bg-gradient-to-br from-green-500/10 to-transparent" : "bg-transparent"}
+          ${mission.isCompleted && !mission.isDaily ? "bg-gradient-to-br from-green-500/10 to-transparent" : "bg-transparent"}
       `}
       >
-        {/* Error Banner */}
-        {completionError && (
-          <div className="mb-2 bg-red-500/20 border border-red-500/50 rounded-lg p-2 text-xs text-red-300">
-            {completionError}
-          </div>
-        )}
-
         {/* --- EYEBROW ROW --- */}
         <div className="flex justify-between items-center mb-3">
           {/* Category Badge */}
@@ -135,11 +108,11 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
 
         {/* --- MAIN CONTENT --- */}
         <div
-          className={`flex-grow w-full mb-6 ${isProcessing ? "opacity-50" : ""}`}
+          className={`flex-grow w-full mb-6 ${isLoading ? "opacity-50" : ""}`}
         >
           {/* Title */}
           <h3
-            className={`text-2xl font-black leading-none mb-2 flex items-center gap-2 ${localCompleted && !mission.isDaily ? "text-neon-green drop-shadow-md" : "text-white"}`}
+            className={`text-2xl font-black leading-none mb-2 flex items-center gap-2 ${mission.isCompleted && !mission.isDaily ? "text-neon-green drop-shadow-md" : "text-white"}`}
           >
             {mission.title[language]}
             {/* Daily Loop Icon (Small distinction next to title) */}
@@ -158,7 +131,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
         <div className="mt-auto flex justify-between items-center gap-2">
           {/* Left: Rewards Badges */}
           <div
-            className={`flex flex-col xs:flex-row sm:flex-row gap-2 transition-opacity ${localCompleted ? "opacity-50" : "opacity-100"}`}
+            className={`flex flex-col xs:flex-row sm:flex-row gap-2 transition-opacity ${mission.isCompleted ? "opacity-50" : "opacity-100"}`}
           >
             <span className="flex items-center gap-1.5 text-xs font-black bg-black/40 px-2.5 py-1.5 rounded-lg text-neon-purple ring-1 ring-neon-purple/30 whitespace-nowrap">
               <Zap size={14} fill="currentColor" /> {mission.xpReward}
@@ -171,27 +144,27 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
           {/* Right: Action Button */}
           <button
             onClick={handleComplete}
-            disabled={localCompleted || isProcessing}
+            disabled={mission.isCompleted || isLoading}
             className={`
                     relative overflow-hidden group/btn px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-300
                     ${
-                      isProcessing
+                      isLoading
                         ? "bg-slate-800/50 text-slate-500 border-2 border-slate-700 cursor-not-allowed"
-                        : localCompleted
+                        : mission.isCompleted
                           ? "bg-transparent text-neon-green border-2 border-neon-green cursor-default"
                           : "bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(192,132,252,0.6)] hover:scale-105 active:scale-95"
                     }
                 `}
           >
             <div
-              className={`relative z-10 flex items-center justify-center gap-2 ${isProcessing ? "animate-pulse" : ""}`}
+              className={`relative z-10 flex items-center justify-center gap-2 ${isLoading ? "animate-pulse" : ""}`}
             >
-              {isProcessing ? (
+              {isLoading ? (
                 <>
                   <span>{t.card_loading || "Loading..."}</span>
                   <Hourglass size={16} className="animate-spin" />
                 </>
-              ) : localCompleted ? (
+              ) : mission.isCompleted ? (
                 <>
                   <span>{t.card_great}</span>
                   <Check size={16} strokeWidth={4} />
@@ -205,7 +178,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
             </div>
 
             {/* Button Shine Effect (Active Only) */}
-            {!localCompleted && !isProcessing && (
+            {!mission.isCompleted && !isLoading && (
               <div className="absolute inset-0 -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent z-0" />
             )}
           </button>
@@ -213,7 +186,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
       </div>
 
       {/* Victory Glow for completed ONE-TIME cards */}
-      {localCompleted && !mission.isDaily && (
+      {mission.isCompleted && !mission.isDaily && (
         <div className="absolute inset-0 bg-neon-green/5 rounded-[2rem] pointer-events-none animate-pulse-glow" />
       )}
     </div>

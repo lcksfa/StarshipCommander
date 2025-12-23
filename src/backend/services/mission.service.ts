@@ -111,18 +111,9 @@ export class MissionService {
     difficulty?: "EASY" | "MEDIUM" | "HARD";
     limit?: number;
     offset?: number;
+    userId?: string; // 添加 userId 参数以获取用户特定的完成状态
   }): Promise<Mission[]> {
     try {
-      // 调试：检查 Prisma 实例
-      console.log(
-        "[MissionService.getAllMissions] this.prisma:",
-        this.prisma.constructor.name,
-      );
-      console.log(
-        "[MissionService.getAllMissions] this.prisma.mission:",
-        typeof (this.prisma as any).mission,
-      );
-
       const where: any = {};
 
       if (filters?.category) {
@@ -141,8 +132,13 @@ export class MissionService {
       const dbMissions = await this.prisma.mission.findMany({
         where,
         include: {
-          userProgress: true,
-          userMissions: true,
+          userMissions: filters?.userId
+            ? {
+                where: {
+                  userId: filters.userId,
+                },
+              }
+            : true,
         },
         orderBy: {
           createdAt: "desc",
@@ -152,7 +148,7 @@ export class MissionService {
       });
 
       return dbMissions.map((dbMission) =>
-        this.mapDbMissionToFrontend(dbMission),
+        this.mapDbMissionToFrontend(dbMission, filters?.userId),
       );
     } catch (error) {
       throw new ServiceError(
@@ -716,18 +712,28 @@ export class MissionService {
   /**
    * 辅助方法：数据库任务对象转换为前端任务对象
    */
-  private mapDbMissionToFrontend(dbMission: any): Mission {
+  private mapDbMissionToFrontend(dbMission: any, userId?: string): Mission {
+    // 如果提供了 userId，从 UserMission 表中获取用户的完成状态
+    let isCompleted = dbMission.isCompleted;
+    let streak = dbMission.streak || 0;
+
+    if (userId && dbMission.userMissions && dbMission.userMissions.length > 0) {
+      const userMission = dbMission.userMissions[0];
+      isCompleted = userMission.isCompleted;
+      streak = userMission.streak || 0;
+    }
+
     return {
       id: dbMission.id,
       title: dbMission.title as any,
       description: dbMission.description as any,
       xpReward: dbMission.xpReward,
       coinReward: dbMission.coinReward,
-      isCompleted: dbMission.isCompleted,
+      isCompleted,
       category: mapDbToFrontendCategory(dbMission.category),
       emoji: dbMission.emoji,
       isDaily: dbMission.isDaily,
-      streak: dbMission.streak || 0,
+      streak,
     };
   }
 

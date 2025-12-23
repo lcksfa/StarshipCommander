@@ -9,6 +9,7 @@ import { Mission, UserStats, LogEntry, MissionCategory } from "../types";
  * 获取所有任务的自定义 Hook
  */
 export function useAllMissions(filters?: {
+  userId?: string; // 添加 userId 参数
   category?: "study" | "health" | "chore" | "creative";
   isDaily?: boolean;
   isActive?: boolean;

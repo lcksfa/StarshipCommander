@@ -35,7 +35,7 @@ const App: React.FC = () => {
     missions,
     isLoading: missionsLoading,
     refetch: refetchMissions,
-  } = useAllMissions({ isActive: true });
+  } = useAllMissions({ userId, isActive: true });
   const {
     stats,
     isLoading: statsLoading,

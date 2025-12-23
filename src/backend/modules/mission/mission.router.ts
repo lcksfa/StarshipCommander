@@ -102,6 +102,7 @@ export class MissionRouter {
 
     // 查询过滤模式
     getMissions: z.object({
+      userId: z.string().min(1).optional(), // 添加 userId 参数
       category: z.enum(["study", "health", "chore", "creative"]).optional(),
       isDaily: z.boolean().optional(),
       isActive: z.boolean().optional(),
