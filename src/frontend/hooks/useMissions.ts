@@ -51,41 +51,41 @@ export function useUserStats(userId: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchStats = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.getUserStats({ userId });
+      setStats(response.data || null);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch user stats";
+      setError(errorMessage);
+      // eslint-disable-next-line no-console
+      console.error("Error fetching user stats:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchStats() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await apiClient.getUserStats({ userId });
-        if (!cancelled) {
-          setStats(response.data || null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const errorMessage =
-            err instanceof Error ? err.message : "Failed to fetch user stats";
-          setError(errorMessage);
-          // eslint-disable-next-line no-console
-          console.error("Error fetching user stats:", err);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+    async function fetchStatsWrapper() {
+      if (!cancelled) {
+        await fetchStats();
       }
     }
 
-    fetchStats();
+    fetchStatsWrapper();
 
     return () => {
       cancelled = true;
     };
   }, [userId]);
 
-  return { stats, isLoading, error };
+  return { stats, isLoading, error, refetch: fetchStats };
 }
 
 /**

@@ -74,26 +74,23 @@ const App: React.FC = () => {
   // Simulation: Hangar unlocks at level 2.
   const isHangarUnlocked = displayStats.level >= 2;
 
-  // 1. New Handler: Triggers the Overlay first
-  const handleEngageMission = async (id: string) => {
-    const mission = displayMissions.find((m) => m.id === id);
-    if (!mission || mission.isCompleted) return;
-
-    // 显示奖励覆盖层
-    setSuccessData({ xp: mission.xpReward, coins: mission.coinReward });
-
-    // 等待 2 秒后隐藏覆盖层
-    setTimeout(() => {
-      setSuccessData(null);
-    }, 2000);
-  };
-
-  // 任务完成后的数据刷新回调
+  // 任务完成后的处理：显示覆盖层 + 刷新数据
   const handleMissionComplete = async (id: string, result?: any) => {
-    // 同时刷新任务和用户统计数据
+    // 1. 显示奖励覆盖层
+    const mission = displayMissions.find((m) => m.id === id);
+    if (mission) {
+      setSuccessData({ xp: mission.xpReward, coins: mission.coinReward });
+
+      // 等待 2 秒后隐藏覆盖层
+      setTimeout(() => {
+        setSuccessData(null);
+      }, 2000);
+    }
+
+    // 2. 刷新任务和用户统计数据
     await Promise.all([refetchMissions(), refetchStats()]);
 
-    // 如果有升级信息，显示升级动画
+    // 3. 如果有升级信息，显示升级动画
     if (result?.levelUp) {
       setShowLevelUp(true);
     }
@@ -451,7 +448,7 @@ const App: React.FC = () => {
                     <MissionCard
                       key={mission.id}
                       mission={mission}
-                      onComplete={handleEngageMission}
+                      onComplete={handleMissionComplete}
                     />
                   ))}
                 </div>

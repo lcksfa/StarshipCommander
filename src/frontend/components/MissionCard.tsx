@@ -38,13 +38,8 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
       const userId = "user-123";
       const result = await completeMission(mission.id, userId);
 
-      // 触发父组件回调以刷新数据
+      // 触发父组件回调以刷新数据和显示覆盖层
       onComplete(mission.id, result);
-
-      // 显示成功消息
-      if (result.levelUp) {
-        alert(`🎉 ${t.card_levelup || "Level Up"}! ${result.newRank || ""}`);
-      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -52,7 +47,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
       // eslint-disable-next-line no-console
       console.error("Failed to complete mission:", error);
 
-      // 显示错误提示
+      // 显示错误提示（只保留错误提示，移除成功消息避免与覆盖层冲突）
       alert(
         `❌ ${t.card_error || "Failed to complete mission"}: ${errorMessage}`,
       );
