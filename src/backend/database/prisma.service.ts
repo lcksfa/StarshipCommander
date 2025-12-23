@@ -99,20 +99,14 @@ export class PrismaService
     }
   }
 
-  // 种子数据创建方法
+  // 种子数据创建方法 / Seed data creation method
   async createSeedData() {
     try {
-      // 创建示例任务
+      // 创建示例任务 / Create example missions
       const seedMissions = [
         {
-          title: {
-            en: "Dental Maintenance",
-            zh: "牙齿维护协议",
-          },
-          description: {
-            en: "Brush teeth for 2 minutes.",
-            zh: "执行刷牙程序，持续2分钟。",
-          },
+          title: "牙齿维护协议",
+          description: "执行刷牙程序，持续2分钟",
           xpReward: 50,
           coinReward: 20,
           category: "HEALTH",
@@ -121,14 +115,8 @@ export class PrismaService
           difficulty: "EASY",
         },
         {
-          title: {
-            en: "Data Intake",
-            zh: "数据摄入",
-          },
-          description: {
-            en: "Read 10 pages of a book.",
-            zh: "阅读书籍10页，扩充数据库。",
-          },
+          title: "数据摄入",
+          description: "阅读书籍10页，扩充数据库",
           xpReward: 100,
           coinReward: 40,
           category: "STUDY",
@@ -137,14 +125,8 @@ export class PrismaService
           difficulty: "MEDIUM",
         },
         {
-          title: {
-            en: "Quarters Cleanup",
-            zh: "舱室清理",
-          },
-          description: {
-            en: "Make your bed nicely.",
-            zh: "整理休眠舱（铺床）。",
-          },
+          title: "舱室清理",
+          description: "整理休眠舱（铺床）",
           xpReward: 75,
           coinReward: 30,
           category: "CHORE",
@@ -153,14 +135,8 @@ export class PrismaService
           difficulty: "EASY",
         },
         {
-          title: {
-            en: "Hydration Check",
-            zh: "液体补充",
-          },
-          description: {
-            en: "Drink a glass of water.",
-            zh: "摄入一杯H2O。",
-          },
+          title: "液体补充",
+          description: "摄入一杯H2O",
           xpReward: 25,
           coinReward: 10,
           category: "HEALTH",
@@ -169,14 +145,8 @@ export class PrismaService
           difficulty: "EASY",
         },
         {
-          title: {
-            en: "Academy Training",
-            zh: "学院特训",
-          },
-          description: {
-            en: "Complete homework.",
-            zh: "完成学院指派的作业任务。",
-          },
+          title: "学院特训",
+          description: "完成学院指派的作业任务",
           xpReward: 150,
           coinReward: 60,
           category: "STUDY",
@@ -185,14 +155,8 @@ export class PrismaService
           difficulty: "MEDIUM",
         },
         {
-          title: {
-            en: "Creative Project",
-            zh: "创意项目",
-          },
-          description: {
-            en: "Work on your creative project for 30 minutes.",
-            zh: "进行创意项目工作30分钟。",
-          },
+          title: "创意项目",
+          description: "进行创意项目工作30分钟",
           xpReward: 120,
           coinReward: 50,
           category: "CREATIVE",
@@ -207,7 +171,7 @@ export class PrismaService
           this.mission.create({
             data: {
               ...mission,
-              category: mission.category as any, // 类型断言以匹配 Prisma 枚举
+              category: mission.category as any, // 类型断言以匹配 Prisma 枚举 / Type assertion for Prisma enum
               difficulty: mission.difficulty as any,
               isActive: true,
             },

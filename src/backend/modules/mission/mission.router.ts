@@ -49,19 +49,13 @@ export class MissionRouter {
   constructor(private readonly missionService: MissionService) {}
 
   /**
-   * Zod 模式定义
+   * Zod 模式定义 / Zod schema definitions
    */
   private readonly schemas = {
-    // 任务创建模式
+    // 任务创建模式 / Mission creation schema
     createMission: z.object({
-      title: z.object({
-        en: z.string().min(1),
-        zh: z.string().min(1),
-      }),
-      description: z.object({
-        en: z.string().min(1),
-        zh: z.string().min(1),
-      }),
+      title: z.string().min(1),
+      description: z.string().min(1),
       xpReward: z.number().min(0).max(1000),
       coinReward: z.number().min(0).max(500),
       category: z.enum(["study", "health", "chore", "creative"]),
@@ -70,21 +64,11 @@ export class MissionRouter {
       difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
     }),
 
-    // 任务更新模式
+    // 任务更新模式 / Mission update schema
     updateMission: z.object({
       id: z.string().min(1),
-      title: z
-        .object({
-          en: z.string().min(1),
-          zh: z.string().min(1),
-        })
-        .optional(),
-      description: z
-        .object({
-          en: z.string().min(1),
-          zh: z.string().min(1),
-        })
-        .optional(),
+      title: z.string().min(1).optional(),
+      description: z.string().min(1).optional(),
       xpReward: z.number().min(0).max(1000).optional(),
       coinReward: z.number().min(0).max(500).optional(),
       category: z.enum(["study", "health", "chore", "creative"]).optional(),

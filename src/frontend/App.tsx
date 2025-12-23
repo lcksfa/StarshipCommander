@@ -28,7 +28,37 @@ import { useLanguage } from "./contexts/LanguageContext";
 
 const App: React.FC = () => {
   const { language, t } = useLanguage();
-  const userId = "user-123";
+
+  // 用户版本控制：当数据重置时自动更新
+  // User version control: auto-update when data is reset
+  const USER_STORAGE_VERSION = "v1"; // 版本号，数据重置时修改此值
+
+  const [userId, setUserId] = useState(() => {
+    const version = localStorage.getItem("starship-user-version");
+    const stored = localStorage.getItem("starship-user-id");
+
+    // 如果版本不匹配或没有用户 ID，重置为默认用户
+    // If version mismatch or no userId, reset to default user
+    if (version !== USER_STORAGE_VERSION || !stored) {
+      const defaultUserId = "user_10_1766463362298_8tjuvr";
+      localStorage.setItem("starship-user-id", defaultUserId);
+      localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
+      console.log("🔄 用户 ID 已重置 / User ID reset:", defaultUserId);
+      return defaultUserId;
+    }
+
+    return stored;
+  });
+
+  // 如果获取用户统计失败（用户不存在），重置用户 ID
+  // If fetching user stats fails (user not exist), reset userId
+  const handleUserNotFound = () => {
+    const defaultUserId = "user_10_1766463362298_8tjuvr";
+    localStorage.setItem("starship-user-id", defaultUserId);
+    localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
+    setUserId(defaultUserId);
+    console.log("🔄 用户不存在，已重置为默认用户 / User not found, reset to default");
+  };
 
   // 使用真实 API 获取数据
   const {
@@ -105,18 +135,12 @@ const App: React.FC = () => {
     emoji: string;
     isDaily: boolean;
   }) => {
-    // TODO: 调用 API 创建任务
+    // TODO: 调用 API 创建任务 / Call API to create mission
     // For user input, we set both En and Zh to the same input string since we don't have a translator API
     const newMission: Mission = {
       id: Date.now().toString(),
-      title: {
-        en: missionData.title,
-        zh: missionData.title,
-      },
-      description: {
-        en: `Priority Level: ${missionData.difficulty.toUpperCase()}`,
-        zh: `优先级: ${missionData.difficulty.toUpperCase()}`,
-      },
+      title: missionData.title,
+      description: `优先级: ${missionData.difficulty.toUpperCase()}`,
       xpReward: missionData.xp,
       coinReward: missionData.coins,
       isCompleted: false,
@@ -125,7 +149,7 @@ const App: React.FC = () => {
       isDaily: missionData.isDaily,
       streak: 0,
     };
-    // TODO: 移除这个，等待 API 创建任务后刷新
+    // TODO: 移除这个，等待 API 创建任务后刷新 / Remove this after API is ready
     // setMissions((prev) => [newMission, ...prev]);
     setIsModalOpen(false);
     await refetchMissions();
@@ -449,6 +473,7 @@ const App: React.FC = () => {
                       key={mission.id}
                       mission={mission}
                       onComplete={handleMissionComplete}
+                      userId={userId}
                     />
                   ))}
                 </div>

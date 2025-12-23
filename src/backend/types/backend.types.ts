@@ -83,8 +83,8 @@ export interface UserStatsService {
 
 // 输入输出类型
 export interface MissionCreateInput {
-  title: LocalizedText;
-  description: LocalizedText;
+  title: string; // 简化为单一字符串 / Simplified to single string
+  description: string; // 简化为单一字符串 / Simplified to single string
   xpReward: number;
   coinReward: number;
   category: MissionCategory;
@@ -94,8 +94,8 @@ export interface MissionCreateInput {
 }
 
 export interface MissionUpdateInput {
-  title?: LocalizedText;
-  description?: LocalizedText;
+  title?: string; // 简化为单一字符串 / Simplified to single string
+  description?: string; // 简化为单一字符串 / Simplified to single string
   xpReward?: number;
   coinReward?: number;
   category?: MissionCategory;

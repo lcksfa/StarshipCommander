@@ -10,8 +10,8 @@ export interface LocalizedText {
 
 export interface Mission {
   id: string;
-  title: LocalizedText;
-  description: LocalizedText;
+  title: string; // 简化为单一字符串 / Simplified to single string
+  description: string; // 简化为单一字符串 / Simplified to single string
   xpReward: number;
   coinReward: number;
   isCompleted: boolean;

@@ -15,9 +15,14 @@ import { useLanguage } from "../contexts/LanguageContext";
 interface MissionCardProps {
   mission: Mission;
   onComplete: (id: string) => void;
+  userId: string; // 添加 userId 参数 / Add userId parameter
 }
 
-const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
+const MissionCard: React.FC<MissionCardProps> = ({
+  mission,
+  onComplete,
+  userId,
+}) => {
   const { language, t } = useLanguage();
   const { completeMission, isLoading } = useCompleteMission();
 
@@ -34,8 +39,6 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
     if (mission.isCompleted) return;
 
     try {
-      // TODO: 替换为真实的 userId
-      const userId = "user-123";
       const result = await completeMission(mission.id, userId);
 
       // 触发父组件回调以刷新数据和显示覆盖层
@@ -109,7 +112,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
           <h3
             className={`text-2xl font-black leading-none mb-2 flex items-center gap-2 ${mission.isCompleted && !mission.isDaily ? "text-neon-green drop-shadow-md" : "text-white"}`}
           >
-            {mission.title[language]}
+            {mission.title}
             {/* Daily Loop Icon (Small distinction next to title) */}
             {mission.isDaily && (
               <Repeat size={14} className="text-slate-600" strokeWidth={3} />
@@ -118,7 +121,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
 
           {/* Description */}
           <p className="text-slate-400 text-sm font-bold leading-relaxed">
-            {mission.description[language]}
+            {mission.description}
           </p>
         </div>
 
