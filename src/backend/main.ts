@@ -9,12 +9,10 @@ import { setMissionService } from "./controllers/mission.controller";
 import { initTRPC } from "@trpc/server";
 import * as expressAdapter from "@trpc/server/adapters/express";
 import { z } from "zod";
+import * as express from "express";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  // Security middleware
-  app.use(helmet());
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -25,11 +23,24 @@ async function bootstrap() {
     }),
   );
 
-  // CORS configuration
+  // CORS configuration - 必须在 helmet 之前配置
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || "http://localhost:3000",
+    "http://localhost:5173", // Vite 开发服务器默认端口
+    "http://localhost:3000", // 备用前端端口
+  ];
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: allowedOrigins,
     credentials: true,
   });
+
+  // Security middleware - 在 CORS 之后配置,避免干扰 CORS 响应头
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    }),
+  );
 
   // Get services from dependency injection container
   const missionService = app.get<MissionService>(MissionService);

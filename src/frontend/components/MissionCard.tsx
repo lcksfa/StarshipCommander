@@ -26,6 +26,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
   const [completionError, setCompletionError] = React.useState<string | null>(
     null,
   );
+  const [isInCooldown, setIsInCooldown] = React.useState(false);
 
   const categoryConfig = {
     health: { label: t.cat_body, color: "text-rose-400" },
@@ -35,7 +36,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
   };
 
   const config = categoryConfig[mission.category] || categoryConfig.study;
-  const isCooldown = mission.isDaily && localCompleted;
+  const isCooldown = mission.isDaily && (localCompleted || isInCooldown);
   const isProcessing = isLoading || (localCompleted && !mission.isCompleted);
 
   const handleComplete = async () => {
@@ -61,6 +62,16 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
+
+      // 检查是否是冷却期错误
+      if (
+        errorMessage.includes("cooldown") ||
+        errorMessage.includes("cooling")
+      ) {
+        setIsInCooldown(true);
+        return; // 不显示错误,直接进入冷却状态
+      }
+
       setCompletionError(errorMessage);
       // eslint-disable-next-line no-console
       console.error("Failed to complete mission:", error);

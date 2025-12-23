@@ -549,7 +549,7 @@ const App: React.FC = () => {
       <Sidebar
         currentTab={activeTab}
         onTabChange={setActiveTab}
-        stats={stats}
+        stats={displayStats}
       />
 
       {/* Main Content Area */}

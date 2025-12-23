@@ -73,12 +73,12 @@ class TrpcApiClient {
         signal: AbortSignal.timeout(30000),
       };
 
-      // GET 请求将参数编码到 URL 中
+      // GET 请求将参数编码到 URL 中 (tRPC 格式: ?input={...})
       if (method === "GET" && input) {
         const params = encodeURIComponent(JSON.stringify(input));
         url += `?input=${params}`;
       }
-      // POST 请求将参数放在 body 中
+      // POST 请求: tRPC mutation 直接发送 JSON,不需要 input 包装
       else if (method === "POST" && input) {
         options.body = JSON.stringify(input);
       }
@@ -94,6 +94,7 @@ class TrpcApiClient {
       const result = await response.json();
 
       // tRPC 返回格式: { result: { data: {...} } }
+      // 我们的后端返回: { result: { data: { success: true, data: [...] } } }
       return result.result.data;
     } catch (error) {
       // eslint-disable-next-line no-console
