@@ -174,3 +174,8 @@ heroku/heroku-config
 # Lock files (keep package-lock.json and pnpm-lock.yaml, ignore yarn.lock)
 yarn.lock
 # pnpm-lock.yaml - keep for version control
+
+# Playwright
+.playwright-mcp/
+playwright-report/
+test-results/
