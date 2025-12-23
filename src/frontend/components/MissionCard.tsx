@@ -39,7 +39,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
       const result = await completeMission(mission.id, userId);
 
       // 触发父组件回调以刷新数据
-      onComplete(mission.id);
+      onComplete(mission.id, result);
 
       // 显示成功消息
       if (result.levelUp) {

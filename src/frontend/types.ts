@@ -39,7 +39,7 @@ export interface AddMissionModalProps {
 
 export interface MissionCardProps {
   mission: Mission;
-  onComplete: (missionId: string) => void;
+  onComplete: (missionId: string, result?: any) => void;
   isAnimated?: boolean;
 }
 

@@ -58,7 +58,18 @@ const App: React.FC = () => {
 
   // 默认统计数据（如果 API 未加载）
   const displayStats = stats || INITIAL_STATS;
-  const displayMissions = missions || [];
+
+  // 任务排序：未完成的在前，已完成的在后
+  const displayMissions = React.useMemo(() => {
+    if (!missions) return [];
+    return [...missions].sort((a, b) => {
+      // 已完成的任务放最后
+      if (a.isCompleted && !b.isCompleted) return 1;
+      if (!a.isCompleted && b.isCompleted) return -1;
+      // 同状态的按创建时间排序（新的在前）
+      return 0;
+    });
+  }, [missions]);
 
   // Simulation: Hangar unlocks at level 2.
   const isHangarUnlocked = displayStats.level >= 2;
@@ -68,27 +79,22 @@ const App: React.FC = () => {
     const mission = displayMissions.find((m) => m.id === id);
     if (!mission || mission.isCompleted) return;
 
-    // Show Overlay with Rewards
+    // 显示奖励覆盖层
     setSuccessData({ xp: mission.xpReward, coins: mission.coinReward });
 
-    // Wait 2 seconds, then finalize
-    setTimeout(async () => {
+    // 等待 2 秒后隐藏覆盖层
+    setTimeout(() => {
       setSuccessData(null);
-      await finalizeMission(id);
     }, 2000);
   };
 
-  // 2. Finalize Handler: Updates Data (previously handleCompleteMission)
-  const finalizeMission = async (id: string) => {
-    const mission = displayMissions.find((m) => m.id === id);
-    if (!mission) return;
-
-    // 调用 API 完成任务（MissionCard 组件中已经处理）
-    // 这里只需刷新数据
+  // 任务完成后的数据刷新回调
+  const handleMissionComplete = async (id: string, result?: any) => {
+    // 同时刷新任务和用户统计数据
     await Promise.all([refetchMissions(), refetchStats()]);
 
-    // 检查是否升级
-    if (stats && displayStats.level < stats.level) {
+    // 如果有升级信息，显示升级动画
+    if (result?.levelUp) {
       setShowLevelUp(true);
     }
   };
