@@ -2,14 +2,16 @@ import React from "react";
 import { LogEntry, UserStats } from "../types";
 import { ClipboardList, Terminal, Zap, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useHistory } from "../hooks/useMissions";
 
 interface CaptainsLogProps {
-  logs: LogEntry[];
   stats: UserStats;
+  userId: string;
 }
 
-const CaptainsLog: React.FC<CaptainsLogProps> = ({ logs, stats }) => {
+const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
   const { t, language } = useLanguage();
+  const { logs, isLoading, error, refetch } = useHistory(userId);
 
   // Weekly Chart Data
   const days =
@@ -207,7 +209,29 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ logs, stats }) => {
             </div>
           ))}
 
-          {logs.length === 0 && (
+          {isLoading && (
+            <div className="text-center py-10 opacity-50">
+              <div className="font-mono text-slate-400 animate-pulse">
+                {language === "zh" ? "加载中..." : "Loading..."}
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-10">
+              <div className="font-mono text-red-400 mb-2">
+                {language === "zh" ? "加载失败" : "Failed to load"}
+              </div>
+              <button
+                onClick={() => refetch()}
+                className="text-neon-cyan hover:underline text-sm"
+              >
+                {language === "zh" ? "重试" : "Retry"}
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !error && logs.length === 0 && (
             <div className="text-center py-10 opacity-50">
               <ClipboardList className="w-16 h-16 mx-auto mb-4 text-slate-600" />
               <p className="font-mono text-slate-400">{t.no_logs}</p>

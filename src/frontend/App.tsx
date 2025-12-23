@@ -8,8 +8,9 @@ import Hologram from "./components/Hologram";
 import AddMissionModal from "./components/AddMissionModal";
 import CaptainsLog from "./components/CaptainsLog";
 import SuccessOverlay from "./components/SuccessOverlay";
-import { Mission, UserStats, Tab, MissionCategory, LogEntry } from "./types";
-import { INITIAL_MISSIONS, INITIAL_STATS, INITIAL_LOGS } from "./constants";
+import { Mission, UserStats, Tab, MissionCategory } from "./types";
+import { INITIAL_STATS } from "./constants";
+import { useAllMissions, useUserStats } from "./hooks/useMissions";
 import {
   Star,
   Plus,
@@ -27,9 +28,21 @@ import { useLanguage } from "./contexts/LanguageContext";
 
 const App: React.FC = () => {
   const { language, t } = useLanguage();
-  const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
-  const [missions, setMissions] = useState<Mission[]>(INITIAL_MISSIONS);
-  const [historyLog, setHistoryLog] = useState<LogEntry[]>(INITIAL_LOGS);
+  const userId = "user-123";
+
+  // 使用真实 API 获取数据
+  const {
+    missions,
+    isLoading: missionsLoading,
+    refetch: refetchMissions,
+  } = useAllMissions({ isActive: true });
+  const {
+    stats,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = useUserStats(userId);
+
+  // 使用本地状态管理 UI 状态
   const [activeTab, setActiveTab] = useState<Tab>(Tab.MISSIONS);
   const [activeHangarTab, setActiveHangarTab] = useState<"ship" | "exchange">(
     "ship",
@@ -43,82 +56,44 @@ const App: React.FC = () => {
     coins: number;
   } | null>(null);
 
+  // 默认统计数据（如果 API 未加载）
+  const displayStats = stats || INITIAL_STATS;
+  const displayMissions = missions || [];
+
   // Simulation: Hangar unlocks at level 2.
-  const isHangarUnlocked = stats.level >= 2;
+  const isHangarUnlocked = displayStats.level >= 2;
 
   // 1. New Handler: Triggers the Overlay first
-  const handleEngageMission = (id: string) => {
-    const mission = missions.find((m) => m.id === id);
+  const handleEngageMission = async (id: string) => {
+    const mission = displayMissions.find((m) => m.id === id);
     if (!mission || mission.isCompleted) return;
 
     // Show Overlay with Rewards
     setSuccessData({ xp: mission.xpReward, coins: mission.coinReward });
 
     // Wait 2 seconds, then finalize
-    setTimeout(() => {
+    setTimeout(async () => {
       setSuccessData(null);
-      finalizeMission(id);
+      await finalizeMission(id);
     }, 2000);
   };
 
   // 2. Finalize Handler: Updates Data (previously handleCompleteMission)
-  const finalizeMission = (id: string) => {
-    const mission = missions.find((m) => m.id === id);
+  const finalizeMission = async (id: string) => {
+    const mission = displayMissions.find((m) => m.id === id);
     if (!mission) return;
 
-    // Mark mission complete
-    setMissions((prev) =>
-      prev.map((m) =>
-        m.id === id
-          ? {
-              ...m,
-              isCompleted: true,
-              streak: m.isDaily ? m.streak + 1 : m.streak,
-            }
-          : m,
-      ),
-    );
+    // 调用 API 完成任务（MissionCard 组件中已经处理）
+    // 这里只需刷新数据
+    await Promise.all([refetchMissions(), refetchStats()]);
 
-    // Add rewards & Update Stats
-    setStats((prev) => {
-      let newXp = prev.currentXp + mission.xpReward;
-      let newLevel = prev.level;
-      let newMaxXp = prev.maxXp;
-      const newCoins = prev.coins + mission.coinReward;
-
-      // Level up logic
-      if (newXp >= prev.maxXp) {
-        newLevel += 1;
-        newXp = newXp - prev.maxXp;
-        newMaxXp = Math.floor(prev.maxXp * 1.2); // Increase difficulty
-        setShowLevelUp(true);
-      }
-
-      return {
-        ...prev,
-        level: newLevel,
-        currentXp: newXp,
-        maxXp: newMaxXp,
-        coins: newCoins,
-        totalMissionsCompleted: prev.totalMissionsCompleted + 1,
-        totalXpEarned: prev.totalXpEarned + mission.xpReward,
-      };
-    });
-
-    // Create Log Entry
-    const newLog: LogEntry = {
-      id: `log-${Date.now()}`,
-      missionId: mission.id,
-      missionTitle: mission.title[language], // Use current language for log snapshot
-      xpEarned: mission.xpReward,
-      coinEarned: mission.coinReward,
-      timestamp: Date.now(),
-      category: mission.category,
-    };
-    setHistoryLog((prev) => [newLog, ...prev]);
+    // 检查是否升级
+    if (stats && displayStats.level < stats.level) {
+      setShowLevelUp(true);
+    }
   };
 
-  const handleAddMission = (missionData: {
+  const handleAddMission = async (missionData: {
     title: string;
     category: MissionCategory;
     difficulty: string;
@@ -127,6 +102,7 @@ const App: React.FC = () => {
     emoji: string;
     isDaily: boolean;
   }) => {
+    // TODO: 调用 API 创建任务
     // For user input, we set both En and Zh to the same input string since we don't have a translator API
     const newMission: Mission = {
       id: Date.now().toString(),
@@ -146,8 +122,10 @@ const App: React.FC = () => {
       isDaily: missionData.isDaily,
       streak: 0,
     };
-    setMissions((prev) => [newMission, ...prev]);
+    // TODO: 移除这个，等待 API 创建任务后刷新
+    // setMissions((prev) => [newMission, ...prev]);
     setIsModalOpen(false);
+    await refetchMissions();
   };
 
   useEffect(() => {
@@ -351,7 +329,7 @@ const App: React.FC = () => {
                         <span className="text-neon-cyan">Voyager</span>
                       </h3>
                       <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">
-                        {t.level} {stats.level}
+                        {t.level} {displayStats.level}
                       </p>
                     </div>
                     <div className="text-right">
@@ -457,20 +435,26 @@ const App: React.FC = () => {
               {t.nav_missions}
             </h2>
             <div className="px-4">
-              <div className="flex flex-col gap-5 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
-                {missions.map((mission) => (
-                  <MissionCard
-                    key={mission.id}
-                    mission={mission}
-                    onComplete={handleEngageMission}
-                  />
-                ))}
-              </div>
+              {missionsLoading ? (
+                <div className="text-center py-10 text-slate-400">
+                  {language === "zh" ? "加载中..." : "Loading..."}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-5 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
+                  {displayMissions.map((mission) => (
+                    <MissionCard
+                      key={mission.id}
+                      mission={mission}
+                      onComplete={handleEngageMission}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
       case Tab.LOG:
-        return <CaptainsLog logs={historyLog} stats={stats} />;
+        return <CaptainsLog stats={displayStats} userId={userId} />;
       case Tab.HANGAR:
         return renderHangar();
       case Tab.PROFILE:
@@ -488,7 +472,7 @@ const App: React.FC = () => {
                   {t.rank_captain} Alex
                 </h2>
                 <p className="text-neon-cyan font-bold mb-6 md:text-xl">
-                  {t.level} {stats.level} {stats.rank}
+                  {t.level} {displayStats.level} {displayStats.rank}
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 md:gap-8 mb-8">
@@ -497,7 +481,7 @@ const App: React.FC = () => {
                       {t.profile_xp}
                     </div>
                     <div className="text-white text-xl md:text-3xl font-bold">
-                      {stats.totalXpEarned.toLocaleString()}
+                      {displayStats.totalXpEarned.toLocaleString()}
                     </div>
                   </div>
                   <div className="bg-black/30 p-4 md:p-6 rounded-2xl border border-white/10">
@@ -505,7 +489,7 @@ const App: React.FC = () => {
                       {t.profile_missions}
                     </div>
                     <div className="text-white text-xl md:text-3xl font-bold">
-                      {stats.totalMissionsCompleted}
+                      {displayStats.totalMissionsCompleted}
                     </div>
                   </div>
                 </div>
@@ -573,7 +557,7 @@ const App: React.FC = () => {
         {/* HUD: Conditionally Rendered */}
         {activeTab !== Tab.PROFILE && (
           <HUD
-            stats={stats}
+            stats={displayStats}
             compact={activeTab === Tab.LOG || activeTab === Tab.HANGAR}
           />
         )}
@@ -624,7 +608,7 @@ const App: React.FC = () => {
               LEVEL UP!
             </h2>
             <p className="text-white text-xl font-bold">
-              You reached Level {stats.level}!
+              You reached Level {displayStats.level}!
             </p>
           </div>
         </div>
