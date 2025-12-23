@@ -20,20 +20,20 @@ async function main() {
     await prisma.achievement.deleteMany();
   }
 
-  // 创建示例用户统计
+  // 创建示例用户统计（所有数据从零开始）
   console.log("👤 创建用户统计...");
   const userStats = await prisma.userStats.create({
     data: {
-      userId: "demo-user",
-      level: 5,
-      currentXp: 450,
-      maxXp: 1000,
-      coins: 1250,
-      totalMissionsCompleted: 142,
-      totalXpEarned: 5000,
-      currentStreak: 7,
-      longestStreak: 21,
-      rank: "CAPTAIN",
+      userId: "user-123",
+      level: 1,
+      currentXp: 0,
+      maxXp: 100,
+      coins: 0,
+      totalMissionsCompleted: 0,
+      totalXpEarned: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      rank: "CADET",
       preferredLang: "zh",
     },
   });
@@ -158,58 +158,10 @@ async function main() {
   }
   console.log(`✅ 创建了 ${missions.length} 个任务`);
 
-  // 创建任务历史记录
-  console.log("📜 创建任务历史记录...");
-  const allMissions = await prisma.mission.findMany();
-
-  // 获取用户统计的 ID
-  const statsForHistory = await prisma.userStats.findUnique({
-    where: { userId: "demo-user" },
-  });
-
-  if (statsForHistory) {
-    for (let i = 0; i < Math.min(5, allMissions.length); i++) {
-      const mission = allMissions[i];
-      const timestamp = new Date();
-      timestamp.setDate(timestamp.getDate() - i); // 过去几天的数据
-
-      await prisma.missionHistory.create({
-        data: {
-          userStatsId: statsForHistory.id, // 使用正确的外键字段
-          missionId: mission.id,
-          missionTitle: mission.title,
-          xpEarned: mission.xpReward,
-          coinEarned: mission.coinReward,
-          category: mission.category,
-          timestamp,
-        },
-      });
-    }
-    console.log("✅ 创建了 5 条历史记录");
-  } else {
-    console.log("⚠️  跳过历史记录创建：用户统计不存在");
-  }
-
-  // 创建用户任务关联
-  console.log("🔗 创建用户任务关联...");
-  for (const mission of allMissions) {
-    await prisma.userMission.create({
-      data: {
-        userId: "demo-user",
-        missionId: mission.id,
-        isCompleted: Math.random() > 0.5, // 随机完成状态
-        streak: Math.floor(Math.random() * 10),
-      },
-    });
-  }
-  console.log(`✅ 创建了 ${allMissions.length} 个用户任务关联`);
-
   console.log("✅ 种子数据创建完成！");
   console.log("\n📊 数据统计:");
-  console.log(`  - 用户: 1`);
+  console.log(`  - 用户: 1 (从零开始)`);
   console.log(`  - 任务: ${missions.length}`);
-  console.log(`  - 历史记录: 5`);
-  console.log(`  - 用户任务关联: ${allMissions.length}`);
 }
 
 main()
