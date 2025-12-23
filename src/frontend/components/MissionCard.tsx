@@ -26,7 +26,13 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
   const [completionError, setCompletionError] = React.useState<string | null>(
     null,
   );
-  const [isInCooldown, setIsInCooldown] = React.useState(false);
+
+  // 当 mission prop 变化时,如果 mission.isCompleted 为 true,则同步更新本地状态
+  React.useEffect(() => {
+    if (mission.isCompleted) {
+      setLocalCompleted(true);
+    }
+  }, [mission.isCompleted]);
 
   const categoryConfig = {
     health: { label: t.cat_body, color: "text-rose-400" },
@@ -36,11 +42,10 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
   };
 
   const config = categoryConfig[mission.category] || categoryConfig.study;
-  const isCooldown = mission.isDaily && (localCompleted || isInCooldown);
   const isProcessing = isLoading || (localCompleted && !mission.isCompleted);
 
   const handleComplete = async () => {
-    if (localCompleted || isCooldown) return;
+    if (localCompleted) return;
 
     setCompletionError(null);
 
@@ -63,15 +68,6 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
 
-      // 检查是否是冷却期错误
-      if (
-        errorMessage.includes("cooldown") ||
-        errorMessage.includes("cooling")
-      ) {
-        setIsInCooldown(true);
-        return; // 不显示错误,直接进入冷却状态
-      }
-
       setCompletionError(errorMessage);
       // eslint-disable-next-line no-console
       console.error("Failed to complete mission:", error);
@@ -91,9 +87,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
         ${
           localCompleted && !mission.isDaily
             ? "bg-white/10 border-neon-green shadow-[0_0_15px_rgba(74,222,128,0.2)] scale-[0.98]"
-            : isCooldown
-              ? "bg-slate-900/40 border-slate-700/50"
-              : "bg-white/10 border-white/20 hover:border-white/40 hover:-translate-y-1 hover:shadow-lg"
+            : "bg-white/10 border-white/20 hover:border-white/40 hover:-translate-y-1 hover:shadow-lg"
         }
       `}
     >
@@ -141,7 +135,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
 
         {/* --- MAIN CONTENT --- */}
         <div
-          className={`flex-grow w-full mb-6 ${isCooldown || isProcessing ? "opacity-50" : ""}`}
+          className={`flex-grow w-full mb-6 ${isProcessing ? "opacity-50" : ""}`}
         >
           {/* Title */}
           <h3
@@ -181,7 +175,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
             className={`
                     relative overflow-hidden group/btn px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-300
                     ${
-                      isCooldown || isProcessing
+                      isProcessing
                         ? "bg-slate-800/50 text-slate-500 border-2 border-slate-700 cursor-not-allowed"
                         : localCompleted
                           ? "bg-transparent text-neon-green border-2 border-neon-green cursor-default"
@@ -190,17 +184,12 @@ const MissionCard: React.FC<MissionCardProps> = ({ mission, onComplete }) => {
                 `}
           >
             <div
-              className={`relative z-10 flex items-center justify-center gap-2 ${isCooldown || isProcessing ? "animate-pulse" : ""}`}
+              className={`relative z-10 flex items-center justify-center gap-2 ${isProcessing ? "animate-pulse" : ""}`}
             >
               {isProcessing ? (
                 <>
                   <span>{t.card_loading || "Loading..."}</span>
                   <Hourglass size={16} className="animate-spin" />
-                </>
-              ) : isCooldown ? (
-                <>
-                  <span>{t.card_recharging}</span>
-                  <Hourglass size={16} />
                 </>
               ) : localCompleted ? (
                 <>

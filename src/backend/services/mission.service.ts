@@ -248,7 +248,7 @@ export class MissionService {
         throw new NotFoundException(`Mission with id ${missionId} not found`);
       }
 
-      // 检查是否已经在冷却期内（非每日任务的冷却）
+      // 获取用户任务记录（用于每日任务的连续性计算）
       const userMission = await this.prisma.userMission.findUnique({
         where: {
           userId_missionId: {
@@ -257,14 +257,6 @@ export class MissionService {
           },
         },
       });
-
-      if (
-        !mission.isDaily &&
-        userMission?.cooldownUntil &&
-        userMission.cooldownUntil > new Date()
-      ) {
-        throw new BadRequestException("Mission is still in cooldown period");
-      }
 
       // 使用事务确保数据一致性
       const result = await this.prisma.$transaction(async (tx) => {
@@ -299,18 +291,12 @@ export class MissionService {
             completedAt: now,
             streak,
             lastCompleted: now,
-            cooldownUntil: mission.isDaily
-              ? undefined
-              : new Date(now.getTime() + 24 * 60 * 60 * 1000), // 24小时冷却
           },
           update: {
             isCompleted: true,
             completedAt: now,
             streak,
             lastCompleted: now,
-            cooldownUntil: mission.isDaily
-              ? undefined
-              : new Date(now.getTime() + 24 * 60 * 60 * 1000),
           },
         });
 
