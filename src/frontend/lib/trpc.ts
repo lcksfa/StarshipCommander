@@ -58,16 +58,32 @@ class TrpcApiClient {
   /**
    * 通用 API 调用方法
    */
-  private async call<T>(endpoint: string, input?: any): Promise<T> {
+  private async call<T>(
+    endpoint: string,
+    input?: any,
+    method: "GET" | "POST" = "POST",
+  ): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: "POST",
+      let url = `${this.baseUrl}${endpoint}`;
+      let options: RequestInit = {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(input),
         signal: AbortSignal.timeout(30000),
-      });
+      };
+
+      // GET 请求将参数编码到 URL 中
+      if (method === "GET" && input) {
+        const params = encodeURIComponent(JSON.stringify(input));
+        url += `?input=${params}`;
+      }
+      // POST 请求将参数放在 body 中
+      else if (method === "POST" && input) {
+        options.body = JSON.stringify(input);
+      }
+
+      const response = await fetch(url, options);
 
       if (!response.ok) {
         throw new Error(
@@ -87,6 +103,20 @@ class TrpcApiClient {
   }
 
   /**
+   * Query 操作使用 GET 请求
+   */
+  private async query<T>(endpoint: string, input?: any): Promise<T> {
+    return this.call<T>(endpoint, input, "GET");
+  }
+
+  /**
+   * Mutation 操作使用 POST 请求
+   */
+  private async mutate<T>(endpoint: string, input?: any): Promise<T> {
+    return this.call<T>(endpoint, input, "POST");
+  }
+
+  /**
    * 获取所有任务
    */
   async getAllMissions(input?: {
@@ -96,21 +126,21 @@ class TrpcApiClient {
     limit?: number;
     offset?: number;
   }) {
-    return this.call<any>("/missions.getAllMissions", input);
+    return this.query<any>("/missions.getAllMissions", input);
   }
 
   /**
    * 完成任务
    */
   async completeMission(input: { missionId: string; userId: string }) {
-    return this.call<any>("/missions.completeMission", input);
+    return this.mutate<any>("/missions.completeMission", input);
   }
 
   /**
    * 获取每日任务
    */
   async getDailyMissions(input: { userId: string }) {
-    return this.call<any>("/missions.getDailyMissions", input);
+    return this.query<any>("/missions.getDailyMissions", input);
   }
 
   /**
@@ -125,7 +155,7 @@ class TrpcApiClient {
     limit?: number;
     offset?: number;
   }) {
-    return this.call<any>("/missions.getUserMissions", input);
+    return this.query<any>("/missions.getUserMissions", input);
   }
 
   /**
@@ -136,7 +166,28 @@ class TrpcApiClient {
     dateFrom?: string;
     dateTo?: string;
   }) {
-    return this.call<any>("/missions.getMissionStats", input);
+    return this.query<any>("/missions.getMissionStats", input);
+  }
+
+  /**
+   * 获取用户历史记录
+   */
+  async getUserHistory(input: {
+    userId: string;
+    dateFrom?: string;
+    dateTo?: string;
+    category?: "study" | "health" | "chore" | "creative";
+    limit?: number;
+    offset?: number;
+  }) {
+    return this.query<any>("/history.getUserHistory", input);
+  }
+
+  /**
+   * 获取用户统计
+   */
+  async getUserStats(input: { userId: string }) {
+    return this.query<any>("/users.getUserStats", input);
   }
 }
 
