@@ -8,9 +8,10 @@ import Hologram from "./components/Hologram";
 import AddMissionModal from "./components/AddMissionModal";
 import CaptainsLog from "./components/CaptainsLog";
 import SuccessOverlay from "./components/SuccessOverlay";
-import { Mission, UserStats, Tab, MissionCategory } from "./types";
+import { Tab, MissionCategory } from "./types";
 import { INITIAL_STATS } from "./constants";
 import { useAllMissions, useUserStats } from "./hooks/useMissions";
+import { apiClient } from "./lib/trpc";
 import {
   Star,
   Plus,
@@ -33,7 +34,8 @@ const App: React.FC = () => {
   // User version control: auto-update when data is reset
   const USER_STORAGE_VERSION = "v1"; // 版本号，数据重置时修改此值
 
-  const [userId, setUserId] = useState(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [userId, _setUserId] = useState(() => {
     const version = localStorage.getItem("starship-user-version");
     const stored = localStorage.getItem("starship-user-id");
 
@@ -52,13 +54,13 @@ const App: React.FC = () => {
 
   // 如果获取用户统计失败（用户不存在），重置用户 ID
   // If fetching user stats fails (user not exist), reset userId
-  const handleUserNotFound = () => {
-    const defaultUserId = "user_10_1766463362298_8tjuvr";
-    localStorage.setItem("starship-user-id", defaultUserId);
-    localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
-    setUserId(defaultUserId);
-    console.log("🔄 用户不存在，已重置为默认用户 / User not found, reset to default");
-  };
+  // const handleUserNotFound = () => {
+  //   const defaultUserId = "user_10_1766463362298_8tjuvr";
+  //   localStorage.setItem("starship-user-id", defaultUserId);
+  //   localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
+  //   setUserId(defaultUserId);
+  //   console.log("🔄 用户不存在，已重置为默认用户 / User not found, reset to default");
+  // };
 
   // 使用真实 API 获取数据
   const {
@@ -68,7 +70,6 @@ const App: React.FC = () => {
   } = useAllMissions({ userId, isActive: true });
   const {
     stats,
-    isLoading: statsLoading,
     refetch: refetchStats,
   } = useUserStats(userId);
 
@@ -135,24 +136,28 @@ const App: React.FC = () => {
     emoji: string;
     isDaily: boolean;
   }) => {
-    // TODO: 调用 API 创建任务 / Call API to create mission
-    // For user input, we set both En and Zh to the same input string since we don't have a translator API
-    const newMission: Mission = {
-      id: Date.now().toString(),
-      title: missionData.title,
-      description: `优先级: ${missionData.difficulty.toUpperCase()}`,
-      xpReward: missionData.xp,
-      coinReward: missionData.coins,
-      isCompleted: false,
-      category: missionData.category,
-      emoji: missionData.emoji,
-      isDaily: missionData.isDaily,
-      streak: 0,
-    };
-    // TODO: 移除这个，等待 API 创建任务后刷新 / Remove this after API is ready
-    // setMissions((prev) => [newMission, ...prev]);
-    setIsModalOpen(false);
-    await refetchMissions();
+    try {
+      // 调用 API 创建任务 / Call API to create mission
+      await apiClient.createMission({
+        title: missionData.title,
+        description: `优先级: ${missionData.difficulty.toUpperCase()}`,
+        xpReward: missionData.xp,
+        coinReward: missionData.coins,
+        category: missionData.category,
+        emoji: missionData.emoji,
+        isDaily: missionData.isDaily,
+        difficulty: missionData.difficulty.toUpperCase() as "EASY" | "MEDIUM" | "HARD",
+      });
+
+      // 关闭模态框并刷新任务列表
+      // Close modal and refresh mission list
+      setIsModalOpen(false);
+      await refetchMissions();
+    } catch (error) {
+      // 错误处理 / Error handling
+      console.error("Failed to create mission:", error);
+      // TODO: 显示错误提示给用户 / Show error message to user
+    }
   };
 
   useEffect(() => {

@@ -23,7 +23,7 @@ const MissionCard: React.FC<MissionCardProps> = ({
   onComplete,
   userId,
 }) => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { completeMission, isLoading } = useCompleteMission();
 
   const categoryConfig = {

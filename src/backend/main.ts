@@ -9,7 +9,6 @@ import { setMissionService } from "./controllers/mission.controller";
 import { initTRPC } from "@trpc/server";
 import * as expressAdapter from "@trpc/server/adapters/express";
 import { z } from "zod";
-import * as express from "express";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -60,6 +59,17 @@ async function bootstrap() {
 
   // 定义 Zod schemas
   const schemas = {
+    createMission: z.object({
+      title: z.string().min(1),
+      description: z.string().min(1),
+      xpReward: z.number().min(0).max(1000),
+      coinReward: z.number().min(0).max(500),
+      category: z.enum(["study", "health", "chore", "creative"]),
+      emoji: z.string().min(1).max(10),
+      isDaily: z.boolean(),
+      difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
+    }),
+
     getMissions: z.object({
       userId: z.string().min(1).optional(),
       category: z.enum(["study", "health", "chore", "creative"]).optional(),
@@ -113,6 +123,21 @@ async function bootstrap() {
     })),
 
     missions: router({
+      createMission: procedure
+        .input(schemas.createMission)
+        .mutation(async ({ input }) => {
+          try {
+            const mission = await missionService.createMission(input);
+            return {
+              success: true,
+              data: mission,
+              message: "Mission created successfully",
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to create mission: ${error.message}`);
+          }
+        }),
+
       getAllMissions: procedure
         .input(schemas.getMissions)
         .query(async ({ input }) => {

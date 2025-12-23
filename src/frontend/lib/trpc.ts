@@ -65,7 +65,7 @@ class TrpcApiClient {
   ): Promise<T> {
     try {
       let url = `${this.baseUrl}${endpoint}`;
-      let options: RequestInit = {
+      const options: RequestInit = {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -129,6 +129,22 @@ class TrpcApiClient {
     offset?: number;
   }) {
     return this.query<any>("/missions.getAllMissions", input);
+  }
+
+  /**
+   * 创建新任务 / Create new mission
+   */
+  async createMission(input: {
+    title: string;
+    description: string;
+    xpReward: number;
+    coinReward: number;
+    category: "study" | "health" | "chore" | "creative";
+    emoji: string;
+    isDaily: boolean;
+    difficulty: "EASY" | "MEDIUM" | "HARD";
+  }) {
+    return this.mutate<any>("/missions.createMission", input);
   }
 
   /**
