@@ -621,6 +621,113 @@ export class MissionService {
   }
 
   /**
+   * 获取用户历史记录列表
+   */
+  async getUserHistory(
+    userId: string,
+    filters?: {
+      dateFrom?: Date;
+      dateTo?: Date;
+      category?: MissionCategory;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<LogEntry[]> {
+    try {
+      // 先获取 userStats 以获得其 ID
+      const userStats = await this.prisma.userStats.findUnique({
+        where: { userId },
+      });
+
+      if (!userStats) {
+        throw new ServiceError(
+          `User stats for userId ${userId} not found`,
+          "GET_USER_HISTORY_ERROR",
+          404,
+        );
+      }
+
+      const where: any = {
+        userStatsId: userStats.id,
+      };
+
+      // 日期过滤
+      if (filters?.dateFrom || filters?.dateTo) {
+        where.timestamp = {};
+        if (filters.dateFrom) where.timestamp.gte = filters.dateFrom;
+        if (filters.dateTo) where.timestamp.lte = filters.dateTo;
+      }
+
+      // 分类过滤
+      if (filters?.category) {
+        where.category = mapFrontendToDbCategory(filters.category);
+      }
+
+      const historyData = await this.prisma.missionHistory.findMany({
+        where,
+        orderBy: {
+          timestamp: "desc",
+        },
+        take: filters?.limit,
+        skip: filters?.offset,
+      });
+
+      // 转换为前端 LogEntry 格式
+      return historyData.map((entry) => ({
+        id: entry.id,
+        missionId: entry.missionId,
+        missionTitle: this.localizedToString(entry.missionTitle),
+        xpEarned: entry.xpEarned,
+        coinEarned: entry.coinEarned,
+        timestamp: entry.timestamp.getTime(),
+        category: mapDbToFrontendCategory(entry.category),
+      }));
+    } catch (error) {
+      throw new ServiceError(
+        `Failed to get user history: ${getErrorMessage(error)}`,
+        "GET_USER_HISTORY_ERROR",
+        500,
+      );
+    }
+  }
+
+  /**
+   * 获取用户统计
+   */
+  async getUserStats(userId: string): Promise<UserStats | null> {
+    try {
+      const dbUserStats = await this.prisma.userStats.findUnique({
+        where: { userId },
+      });
+
+      if (!dbUserStats) {
+        return null;
+      }
+
+      return this.mapDbUserStatsToFrontend(dbUserStats);
+    } catch (error) {
+      throw new ServiceError(
+        `Failed to get user stats: ${getErrorMessage(error)}`,
+        "GET_USER_STATS_ERROR",
+        500,
+      );
+    }
+  }
+
+  /**
+   * 将 LocalizedText 转换为字符串（取当前语言或第一个值）
+   */
+  private localizedToString(
+    localized: Record<string, string> | string,
+  ): string {
+    if (typeof localized === "string") {
+      return localized;
+    }
+    // 优先返回英文，其次中文，最后第一个值
+    return localized["en"] || localized["zh"] || Object.values(localized)[0];
+  }
+
+  /**
    * 辅助方法：数据库任务对象转换为前端任务对象
    */
   private mapDbMissionToFrontend(dbMission: any): Mission {

@@ -76,6 +76,19 @@ async function bootstrap() {
       dateFrom: z.string().datetime().optional(),
       dateTo: z.string().datetime().optional(),
     }),
+
+    getUserHistory: z.object({
+      userId: z.string().min(1),
+      dateFrom: z.string().datetime().optional(),
+      dateTo: z.string().datetime().optional(),
+      category: z.enum(["study", "health", "chore", "creative"]).optional(),
+      limit: z.number().min(1).max(100).optional(),
+      offset: z.number().min(0).optional(),
+    }),
+
+    getUserStats: z.object({
+      userId: z.string().min(1),
+    }),
   };
 
   // 创建 app router
@@ -169,6 +182,50 @@ async function bootstrap() {
             };
           } catch (error: any) {
             throw new Error(`Failed to get mission stats: ${error.message}`);
+          }
+        }),
+    }),
+
+    history: router({
+      getUserHistory: procedure
+        .input(schemas.getUserHistory)
+        .query(async ({ input }) => {
+          try {
+            const history = await missionService.getUserHistory(input.userId, {
+              dateFrom: input.dateFrom ? new Date(input.dateFrom) : undefined,
+              dateTo: input.dateTo ? new Date(input.dateTo) : undefined,
+              category: input.category,
+              limit: input.limit,
+              offset: input.offset,
+            });
+            return {
+              success: true,
+              data: history,
+              count: history.length,
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to get user history: ${error.message}`);
+          }
+        }),
+    }),
+
+    users: router({
+      getUserStats: procedure
+        .input(schemas.getUserStats)
+        .query(async ({ input }) => {
+          try {
+            const stats = await missionService.getUserStats(input.userId);
+            if (!stats) {
+              throw new Error(
+                `User stats for userId ${input.userId} not found`,
+              );
+            }
+            return {
+              success: true,
+              data: stats,
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to get user stats: ${error.message}`);
           }
         }),
     }),
