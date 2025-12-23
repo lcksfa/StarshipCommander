@@ -121,6 +121,7 @@ class TrpcApiClient {
    * 获取所有任务
    */
   async getAllMissions(input?: {
+    userId?: string;
     category?: "study" | "health" | "chore" | "creative";
     isDaily?: boolean;
     isActive?: boolean;

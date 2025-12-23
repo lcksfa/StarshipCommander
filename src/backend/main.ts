@@ -61,6 +61,7 @@ async function bootstrap() {
   // 定义 Zod schemas
   const schemas = {
     getMissions: z.object({
+      userId: z.string().min(1).optional(),
       category: z.enum(["study", "health", "chore", "creative"]).optional(),
       isDaily: z.boolean().optional(),
       isActive: z.boolean().optional(),
