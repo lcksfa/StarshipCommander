@@ -2,9 +2,9 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import helmet from "helmet";
-import { AppModule } from "./app.module.js";
-import { TrpcService } from "./trpc/trpc.service.js";
-import { MissionRouter } from "./modules/mission/mission.router.js";
+import { AppModule } from "./app.module";
+import { TrpcService } from "./trpc/trpc.service";
+import { MissionRouter } from "./modules/mission/mission.router";
 import * as expressAdapter from "@trpc/server/adapters/express";
 
 async function bootstrap() {

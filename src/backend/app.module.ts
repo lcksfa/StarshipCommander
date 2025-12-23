@@ -1,18 +1,19 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { PrismaService } from "./database/prisma.service.js";
+import { MissionService } from "./services/mission.service.js";
+import { TrpcService } from "./trpc/trpc.service.js";
+import { MissionRouter } from "./modules/mission/mission.router.js";
 
-/**
- * 临时 AppModule - 用于类型检查通过
- * TODO: 完整实现将在任务 3 中完成
- */
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ".env",
     }),
   ],
   controllers: [],
-  providers: [],
+  providers: [PrismaService, MissionService, TrpcService, MissionRouter],
+  exports: [PrismaService, MissionService, TrpcService, MissionRouter],
 })
 export class AppModule {}
