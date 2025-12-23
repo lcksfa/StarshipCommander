@@ -3,9 +3,12 @@ import { ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
-import { TrpcService } from "./trpc/trpc.service";
-import { MissionRouter } from "./modules/mission/mission.router";
+import { MissionService } from "./services/mission.service";
+import { PrismaService } from "./database/prisma.service";
+import { setMissionService } from "./controllers/mission.controller";
+import { initTRPC } from "@trpc/server";
 import * as expressAdapter from "@trpc/server/adapters/express";
+import { z } from "zod";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,27 +31,158 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Get tRPC service and mission router
-  const trpcService = app.get(TrpcService);
-  const missionRouter = app.get(MissionRouter);
+  // Get services from dependency injection container
+  const missionService = app.get<MissionService>(MissionService);
+  const prismaService = app.get<PrismaService>(PrismaService);
 
-  // Create tRPC router
-  const appRouter = trpcService.router({
-    health: trpcService.procedure.query(() => ({
+  // 手动连接 MissionService 的数据库
+  await missionService.connect();
+
+  // 设置 MissionService 实例到 Controller（避免依赖注入问题）
+  setMissionService(missionService);
+
+  // 创建 tRPC 实例
+  const t = initTRPC.create();
+
+  const procedure = t.procedure;
+  const router = t.router;
+
+  // 定义 Zod schemas
+  const schemas = {
+    getMissions: z.object({
+      category: z.enum(["study", "health", "chore", "creative"]).optional(),
+      isDaily: z.boolean().optional(),
+      isActive: z.boolean().optional(),
+      difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
+      limit: z.number().min(1).max(100).optional(),
+      offset: z.number().min(0).optional(),
+    }),
+
+    getMission: z.object({
+      id: z.string().min(1),
+    }),
+
+    completeMission: z.object({
+      missionId: z.string().min(1),
+      userId: z.string().min(1),
+    }),
+
+    getDailyMissions: z.object({
+      userId: z.string().min(1),
+    }),
+
+    getMissionStats: z.object({
+      userId: z.string().min(1),
+      dateFrom: z.string().datetime().optional(),
+      dateTo: z.string().datetime().optional(),
+    }),
+  };
+
+  // 创建 app router
+  const appRouter = router({
+    health: procedure.query(() => ({
       status: "Server is running",
       timestamp: new Date().toISOString(),
       framework: "NestJS + tRPC",
       version: "2.0.0",
     })),
-    missions: missionRouter.getRouter(),
+
+    missions: router({
+      getAllMissions: procedure
+        .input(schemas.getMissions)
+        .query(async ({ input }) => {
+          try {
+            const missions = await missionService.getAllMissions(input);
+            return {
+              success: true,
+              data: missions,
+              count: missions.length,
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to get missions: ${error.message}`);
+          }
+        }),
+
+      getMission: procedure
+        .input(schemas.getMission)
+        .query(async ({ input }) => {
+          try {
+            const mission = await missionService.getMission(input.id);
+            if (!mission) {
+              throw new Error(`Mission with id ${input.id} not found`);
+            }
+            return {
+              success: true,
+              data: mission,
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to get mission: ${error.message}`);
+          }
+        }),
+
+      completeMission: procedure
+        .input(schemas.completeMission)
+        .mutation(async ({ input }) => {
+          try {
+            const result = await missionService.completeMission(
+              input.missionId,
+              input.userId,
+            );
+            return {
+              success: true,
+              data: result,
+              message: result.message,
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to complete mission: ${error.message}`);
+          }
+        }),
+
+      getDailyMissions: procedure
+        .input(schemas.getDailyMissions)
+        .query(async ({ input }) => {
+          try {
+            const missions = await missionService.getDailyMissions(
+              input.userId,
+            );
+            return {
+              success: true,
+              data: missions,
+              count: missions.length,
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to get daily missions: ${error.message}`);
+          }
+        }),
+
+      getMissionStats: procedure
+        .input(schemas.getMissionStats)
+        .query(async ({ input }) => {
+          try {
+            const stats = await missionService.getMissionStats(input.userId, {
+              from: input.dateFrom ? new Date(input.dateFrom) : new Date(),
+              to: input.dateTo ? new Date(input.dateTo) : new Date(),
+            });
+            return {
+              success: true,
+              data: stats,
+            };
+          } catch (error: any) {
+            throw new Error(`Failed to get mission stats: ${error.message}`);
+          }
+        }),
+    }),
   });
 
-  // Mount tRPC middleware
+  // Mount tRPC middleware - 使用已连接的 Prisma 实例创建上下文
   app.use(
     "/trpc",
     expressAdapter.createExpressMiddleware({
       router: appRouter,
-      createContext: trpcService.createContext,
+      createContext: async () => ({
+        prisma: prismaService, // 使用已连接的 PrismaService 实例
+        user: null,
+      }),
     }),
   );
 

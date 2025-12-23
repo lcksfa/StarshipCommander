@@ -6,7 +6,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from "@nestjs/common";
-import { PrismaService } from "../database/prisma.service.js";
+import { PrismaClient } from "@prisma/client";
 import { Mission, MissionCategory, UserStats } from "../shared/shared/types.js";
 import {
   MissionCreateInput,
@@ -34,7 +34,20 @@ function getErrorMessage(error: unknown): string {
 
 @Injectable()
 export class MissionService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly prisma: PrismaClient;
+
+  constructor() {
+    // 直接创建 PrismaClient 实例，不依赖依赖注入
+    this.prisma = new PrismaClient();
+  }
+
+  /**
+   * 手动连接数据库（需要在应用启动时调用）
+   */
+  async connect() {
+    await this.prisma.$connect();
+    console.log("✅ MissionService: Database connected");
+  }
 
   /**
    * 创建新任务
@@ -100,6 +113,16 @@ export class MissionService {
     offset?: number;
   }): Promise<Mission[]> {
     try {
+      // 调试：检查 Prisma 实例
+      console.log(
+        "[MissionService.getAllMissions] this.prisma:",
+        this.prisma.constructor.name,
+      );
+      console.log(
+        "[MissionService.getAllMissions] this.prisma.mission:",
+        typeof (this.prisma as any).mission,
+      );
+
       const where: any = {};
 
       if (filters?.category) {
