@@ -1,0 +1,92 @@
+# 依赖 / Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store
+
+# 构建产物 / Build Outputs
+dist
+dist-ssr
+*.local
+src/backend/dist
+build
+
+# 测试 / Tests
+coverage
+.nyc_output
+*.test.js
+*.spec.js
+__tests__
+tests
+test-results
+playwright-report
+playwright/.cache
+
+# 数据库 / Database
+*.db
+*.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# 日志 / Logs
+logs
+*.log
+logs/
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git / Git
+.git
+.gitignore
+.gitattributes
+
+# Docker / Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+# 排除 docker 目录，但保留 nginx.conf
+docker/*
+!docker/nginx.conf
+
+# 文档 / Documentation
+*.md
+!README.md
+docs/
+deploy/
+
+# CI/CD / CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+circle.yml
+
+# 环境变量 / Environment Variables
+.env
+.env.*
+!.env.example
+
+# 临时文件 / Temporary Files
+*.tmp
+.cache
+.temp
+*.pid
+
+# 部署相关 / Deployment
+deploy/
+scripts/
+.editorconfig
+.prettierrc*
+.eslintrc*
+.prettierrc
+
+# 其他 / Others
+.editorconfig
+LICENSE
