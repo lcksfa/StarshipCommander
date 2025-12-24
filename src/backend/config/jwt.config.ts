@@ -5,15 +5,15 @@
 /**
  * JWT Configuration / JWT 配置
  *
- * Security considerations / 安全考虑:
- * - Access tokens are short-lived (15 minutes) / 访问令牌短期有效（15分钟）
+ * Family project security considerations / 家庭项目安全考虑:
+ * - Access tokens are long-lived (7 days) for convenience / 访问令牌长期有效（7天），方便使用
  * - Refresh tokens are long-lived (7 days) / 刷新令牌长期有效（7天）
  * - Use HS256 algorithm for simplicity / 使用 HS256 算法简化实现
- * - TODO: In production, use RS256 (asymmetric encryption) / TODO: 生产环境使用 RS256（非对称加密）
+ * - NOTE: For production/enterprise apps, use shorter access tokens (15m) and RS256 / 注意：生产环境/企业应用应使用更短的访问令牌（15分钟）和 RS256
  */
 export const jwtConfig = {
   // Access Token Configuration / 访问令牌配置
-  accessTokenExpiry: "15m", // 15 minutes / 15分钟
+  accessTokenExpiry: "7d", // 7 days / 7天（家庭项目，延长有效期）
 
   // Refresh Token Configuration / 刷新令牌配置
   refreshTokenExpiry: "7d", // 7 days / 7天

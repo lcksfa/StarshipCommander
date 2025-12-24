@@ -78,10 +78,11 @@ async function getUserFromRequest(
           role: "user",
         };
       } catch (error) {
-        // Token verification failed, fall through to method 2
-        // Token 验证失败，回退到方法2
-         
-        console.error("JWT verification failed:", error);
+        // Token verification failed (expired or invalid), fall through to method 2
+        // This is expected behavior when tokens expire, not an error condition
+        // Token 验证失败（过期或无效），回退到方法2
+        // 这是token过期的预期行为，不是错误条件
+        // Silent fail - let the frontend handle token refresh
       }
     }
 

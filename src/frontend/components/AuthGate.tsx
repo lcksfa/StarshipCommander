@@ -107,7 +107,8 @@ export function AuthGate({ children }: AuthGateProps) {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-8 py-12">
         <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
           {/* Logo and Title / Logo 和标题（左侧） */}
-          <div className="text-center md:text-left md:w-1/2 self-center">
+          {/* 小屏幕上隐藏标题区域，避免挤压登录表单 / Hide title section on small screens */}
+          <div className="hidden md:block text-center md:text-left md:w-1/2 self-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-neon-cyan to-neon-purple mb-6 shadow-[0_0_30px_rgba(34,211,238,0.5)]">
               <Rocket className="w-10 h-10 text-white" />
             </div>
@@ -125,7 +126,8 @@ export function AuthGate({ children }: AuthGateProps) {
           </div>
 
           {/* Auth Forms Container / 认证表单容器（右侧） */}
-          <div className="w-full max-w-md flex-shrink-0">
+          {/* 小屏幕上占满宽度，大屏幕上固定宽度 / Full width on small screens, fixed width on large screens */}
+          <div className="w-full max-w-md flex-shrink-0 px-2 sm:px-0">
           {/* Toggle between Login and Register / 登录和注册切换 */}
           <div className="mb-6 flex gap-2 bg-slate-900/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
             <button

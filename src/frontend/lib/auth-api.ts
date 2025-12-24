@@ -40,9 +40,10 @@ class AuthApiClient {
   private async call<T>(
     endpoint: string,
     input?: any,
-    method: "GET" | "POST" = "POST"
+    method: "GET" | "POST" = "POST",
+    skipAuth: boolean = false
   ): Promise<T> {
-    try {
+  try {
       let url = `${this.baseUrl}${endpoint}`;
 
       const options: RequestInit = {
@@ -53,9 +54,13 @@ class AuthApiClient {
         signal: AbortSignal.timeout(30000),
       };
 
-      // Add authorization header if token exists / 如果 token 存在则添加授权头
+      // Get auth data for potential token refresh
+      // 获取认证数据以备可能的token刷新
       const authData = this.getStoredAuthData();
-      if (authData?.accessToken) {
+
+      // Add authorization header if token exists and not skipping auth
+      // 如果 token 存在且不跳过认证，则添加授权头
+      if (!skipAuth && authData?.accessToken) {
         options.headers = {
           ...options.headers,
           Authorization: `Bearer ${authData.accessToken}`,
@@ -74,8 +79,9 @@ class AuthApiClient {
 
       let response = await fetch(url, options);
 
-      // Auto-refresh token on 401 Unauthorized / 401 时自动刷新 token
-      if (response.status === 401 && authData?.refreshToken) {
+      // Auto-refresh token on 401 Unauthorized (only for authenticated requests)
+      // 401 时自动刷新 token（仅用于认证请求）
+      if (response.status === 401 && !skipAuth && authData?.refreshToken) {
         // eslint-disable-next-line no-console
         console.log("⚠️ Got 401, attempting to refresh token...");
 
@@ -186,9 +192,13 @@ class AuthApiClient {
    * });
    */
   async register(data: RegisterRequest): Promise<User> {
+    // Skip auth header for public registration endpoint
+    // 跳过公开注册端点的认证头
     const response = await this.call<ApiResponse<RegisterResponse>>(
       "/auth.register",
-      data
+      data,
+      "POST",
+      true // skipAuth = true
     );
 
     if (!response.success || !response.data) {
@@ -212,9 +222,13 @@ class AuthApiClient {
    * });
    */
   async login(data: LoginRequest): Promise<LoginResponse> {
+    // Skip auth header for public login endpoint
+    // 跳过公开登录端点的认证头
     const response = await this.call<ApiResponse<LoginResponse>>(
       "/auth.login",
-      data
+      data,
+      "POST",
+      true // skipAuth = true
     );
 
     if (!response.success || !response.data) {
@@ -245,9 +259,13 @@ class AuthApiClient {
    * const { tokens } = await authApi.refreshToken(refreshToken);
    */
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+    // Skip auth header for refresh endpoint - we're using the refresh token instead
+    // 跳过刷新端点的认证头 - 我们使用刷新令牌代替
     const response = await this.call<ApiResponse<RefreshTokenResponse>>(
       "/auth.refresh",
-      { refreshToken }
+      { refreshToken },
+      "POST",
+      true // skipAuth = true
     );
 
     if (!response.success || !response.data) {

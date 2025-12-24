@@ -1,6 +1,8 @@
 // tRPC API 客户端 - 简化版
 // tRPC API Client - Simplified Version
 
+import { authApi } from "./auth-api";
+
 /**
  * 后端 API 类型定义（临时，稍后从后端生成）
  */
@@ -80,7 +82,7 @@ class TrpcApiClient {
 
   /**
    * 通用 API 调用方法
-   * Generic API call method with JWT auth support
+   * Generic API call method with JWT auth support and auto token refresh
    */
   private async call<T>(
     endpoint: string,
@@ -91,7 +93,7 @@ class TrpcApiClient {
       let url = `${this.baseUrl}${endpoint}`;
 
       // 优先使用 JWT token 认证 / Prefer JWT token authentication
-      const authData = this.getStoredAuthData();
+      let authData = this.getStoredAuthData();
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
@@ -124,7 +126,35 @@ class TrpcApiClient {
         options.body = JSON.stringify(input);
       }
 
-      const response = await fetch(url, options);
+      let response = await fetch(url, options);
+
+      // Auto-refresh token on 401 Unauthorized / 401 时自动刷新 token
+      if (response.status === 401 && authData?.refreshToken) {
+        // eslint-disable-next-line no-console
+        console.log("⚠️ Got 401, attempting to refresh token...");
+
+        try {
+          // Try to refresh the token / 尝试刷新 token
+          await authApi.refreshToken(authData.refreshToken);
+
+          // Retry the original request with new token / 使用新 token 重试原始请求
+          authData = this.getStoredAuthData();
+          if (authData?.accessToken) {
+            headers["Authorization"] = `Bearer ${authData.accessToken}`;
+            // eslint-disable-next-line no-console
+            console.log("✅ Token refreshed, retrying original request");
+
+            response = await fetch(url, options);
+          }
+        } catch (refreshError) {
+          // eslint-disable-next-line no-console
+          console.error("❌ Token refresh failed:", refreshError);
+          // Clear auth data and let the error propagate
+          // 清除认证数据并让错误传播
+          authApi.clearAuthData();
+          throw new Error("Session expired. Please login again.");
+        }
+      }
 
       if (!response.ok) {
         throw new Error(
