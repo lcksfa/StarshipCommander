@@ -2,16 +2,16 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import helmet from "helmet";
-import { AppModule } from "./app.module";
-import { MissionService } from "./services/mission.service";
-import { PrismaService } from "./database/prisma.service";
-import { setMissionService } from "./controllers/mission.controller";
+import { AppModule } from "./app.module.js";
+import { MissionService } from "./services/mission.service.js";
+import { PrismaService } from "./database/prisma.service.js";
+import { setMissionService } from "./controllers/mission.controller.js";
 import { initTRPC, TRPCError } from "@trpc/server";
 import * as expressAdapter from "@trpc/server/adapters/express";
 import { z } from "zod";
-import { createContext, type Context } from "./context";
-import { createMissionSchema } from "./validation/mission-validation";
-import { createAuthRouter } from "./routers/auth.router";
+import { createContext, type Context } from "./context.js";
+import { createMissionSchema } from "./validation/mission-validation.js";
+import { createAuthRouter } from "./routers/auth.router.js";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

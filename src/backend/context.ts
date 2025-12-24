@@ -4,7 +4,7 @@
 
 import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { IncomingMessage } from "http";
-import { authService } from "./services/auth.service";
+import { authService } from "./services/auth.service.js";
 
 /**
  * User interface / 用户接口

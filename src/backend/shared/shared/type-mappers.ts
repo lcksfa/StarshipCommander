@@ -1,8 +1,8 @@
 // 类型映射工具 - 前后端类型转换
 // Type mapping utilities - frontend-backend type conversion
 
-import { MissionCategory as FrontendCategory, LocalizedText } from "./types";
-import { DbCategory } from "./types";
+import { MissionCategory as FrontendCategory, LocalizedText } from "./types.js";
+import { DbCategory } from "./types.js";
 
 /**
  * 前端类别转换为数据库类别
