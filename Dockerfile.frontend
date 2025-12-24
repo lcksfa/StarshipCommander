@@ -48,17 +48,15 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 # 从 builder 阶段复制构建产物
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 创建非 root 用户
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S nginx -u 1001 -G nginx && \
-    chown -R nginx:nginx /usr/share/nginx/html && \
+# 设置目录权限（nginx 用户已存在于镜像中）
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
     chown -R nginx:nginx /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid
 
-# 切换到非 root 用户
+# 切换到 nginx 用户（镜像已提供）
 USER nginx
 
 # 暴露端口
