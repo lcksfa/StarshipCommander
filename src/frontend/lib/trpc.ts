@@ -56,7 +56,31 @@ class TrpcApiClient {
   }
 
   /**
+   * 获取存储的认证数据
+   * Get stored auth data from localStorage
+   */
+  private getStoredAuthData() {
+    try {
+      const data = localStorage.getItem("starship-auth-data");
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to parse stored auth data:", error);
+      return null;
+    }
+  }
+
+  /**
+   * 获取当前用户 ID（向后兼容）
+   * Get current user ID from localStorage (backward compatibility)
+   */
+  private getUserId(): string {
+    return localStorage.getItem("starship-user-id") || "";
+  }
+
+  /**
    * 通用 API 调用方法
+   * Generic API call method with JWT auth support
    */
   private async call<T>(
     endpoint: string,
@@ -65,11 +89,28 @@ class TrpcApiClient {
   ): Promise<T> {
     try {
       let url = `${this.baseUrl}${endpoint}`;
+
+      // 优先使用 JWT token 认证 / Prefer JWT token authentication
+      const authData = this.getStoredAuthData();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // 如果有 JWT token，使用 Bearer token / If JWT token exists, use Bearer token
+      if (authData?.accessToken) {
+        headers["Authorization"] = `Bearer ${authData.accessToken}`;
+      }
+      // 否则回退到 x-user-id header（向后兼容） / Otherwise fallback to x-user-id header
+      else {
+        const userId = this.getUserId();
+        if (userId) {
+          headers["x-user-id"] = userId;
+        }
+      }
+
       const options: RequestInit = {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         signal: AbortSignal.timeout(30000),
       };
 
