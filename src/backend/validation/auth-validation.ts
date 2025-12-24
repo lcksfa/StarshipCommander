@@ -25,7 +25,7 @@ export const registerSchema = z
       .optional(),
     preferredLang: z
       .enum(["en", "zh"])
-      .default("zh"),
+      .optional(),
   })
   .strict();
 
