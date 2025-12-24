@@ -1,0 +1,233 @@
+schema: 1
+story: 'e2e.test-suite'
+story_title: 'E2E Test Suite - Mission Management'
+gate: CONCERNS
+status_reason: '所有核心功能有完整 E2E 覆盖，但测试金字塔不平衡且缺少单元/集成测试。安全性和性能测试不足。'
+reviewer: 'Quinn (Test Architect)'
+updated: '2025-12-23T12:00:00Z'
+
+top_issues:
+  - severity: medium
+    category: 'Test Coverage'
+    title: '缺少单元测试和集成测试'
+    description: '测试金字塔严重不平衡，仅有 E2E 测试（17个）和1个单元测试。无法快速隔离和测试单个函数。'
+    suggested_owner: 'dev'
+    refs:
+      - 'docs/qa/assessments/e2e-trace-20251223.md#gap-1'
+      - 'docs/qa/assessments/e2e-trace-20251223.md#gap-2'
+
+  - severity: medium
+    category: 'Security'
+    title: '安全测试覆盖不足'
+    description: '仅测试了基本认证拒绝，缺少 SQL 注入、XSS、速率限制、授权等安全测试。'
+    suggested_owner: 'dev'
+    refs:
+      - 'docs/qa/assessments/e2e-trace-20251223.md#gap-4'
+      - 'REQ-11: Authentication'
+
+  - severity: medium
+    category: 'Performance'
+    title: '缺少性能和负载测试'
+    description: '无性能基准测试、负载测试或压力测试。无法验证系统在高并发下的表现。'
+    suggested_owner: 'dev'
+    refs:
+      - 'docs/qa/assessments/e2e-trace-20251223.md#gap-3'
+
+  - severity: low
+    category: 'Maintainability'
+    title: '测试执行时间可通过并行化优化'
+    description: '当前测试串行执行（fullyParallel: false），总耗时 36.8s。可通过并行化改进。'
+    suggested_owner: 'dev'
+    refs:
+      - 'playwright.config.ts:16'
+
+waiver:
+  active: false
+  reason: null
+  approver: null
+
+# Extended fields
+quality_score: 60 # 100 - (10 × 4 CONCERNS) = 60
+expires: '2026-01-06T12:00:00Z' # 2 weeks from review
+
+evidence:
+  tests_reviewed: 17
+  test_files:
+    - 'tests/e2e/mission-creation.spec.ts' # 12 tests
+    - 'tests/e2e/mission-completion.spec.ts' # 5 tests
+  requirements_analyzed: 17
+  risks_identified: 4 # 4 medium-priority gaps
+  trace:
+    requirements_covered: 17 # 100% coverage
+    requirements_gaps: 0 # All requirements have E2E coverage
+    ac_covered: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+    ac_gaps: []
+  test_pyramid_health: 'IMBALANCED' # E2E: 100%, Integration: 0%, Unit: 6%
+
+nfr_validation:
+  security:
+    status: CONCERNS
+    notes: |
+      - ✅ 基本认证测试（未认证用户拒绝）
+      - ⚠️ 缺少 SQL 注入防护测试
+      - ⚠️ 缺少 XSS 防护测试
+      - ⚠️ 缺少速率限制测试
+      - ⚠️ 缺少授权测试（跨用户访问）
+      - ⚠️ 缺少输入清理测试
+      建议：
+      - 添加输入验证和清理测试
+      - 实施 SQL 注入测试用例
+      - 添加速率限制集成测试
+      - 测试跨用户访问隔离
+
+  performance:
+    status: CONCERNS
+    notes: |
+      - ✅ E2E 测试执行时间 36.8s（可接受）
+      - ✅ 平均每个测试 2.2s（良好）
+      - ⚠️ 无性能基准测试
+      - ⚠️ 无负载测试（无并发验证）
+      - ⚠️ 数据库查询性能未监控
+      - ⚠️ API 响应时间未测量
+      建议：
+      - 使用 k6 或 Artillery 实施负载测试
+      - 建立性能基准（API p95 < 200ms）
+      - 添加数据库查询性能监控
+      - 测试 100 并发用户场景
+
+  reliability:
+    status: PASS
+    notes: |
+      - ✅ 事务一致性已验证
+      - ✅ 数据持久化已测试
+      - ✅ 错误处理覆盖良好
+      - ✅ API 错误响应格式一致
+      - ✅ 重复检测机制已验证
+      - ✅ 数据库状态一致性已确认
+
+  maintainability:
+    status: PASS
+    notes: |
+      - ✅ 测试清晰度良好（中英双语注释）
+      - ✅ 测试隔离良好（beforeAll/beforeEach hooks）
+      - ✅ 数据管理良好（TEST_USER_ID 常量，动态数据）
+      - ✅ 选择器健壮（data-testid 属性）
+      - ✅ 断言质量高（具体且有上下文）
+      - ✅ 代码自文档化
+      改进空间：
+      - 可使用 test.each() 进行数据驱动测试
+      - 可添加性能测试（批量创建）
+
+testability_assessment:
+  controllability:
+    status: GOOD
+    notes: '测试数据可通过 beforeAll hooks 和 API 完全控制'
+
+  observability:
+    status: GOOD
+    notes: 'API 响应、UI 元素、数据库状态都可观察'
+
+  debuggability:
+    status: GOOD
+    notes: '清晰的测试名称、console.log 输出、具体断言有助于调试'
+
+code_quality_metrics:
+  test_execution_time: 36.8s
+  avg_test_time: 2.2s
+  test_parallelization: false
+  code_coverage:
+    e2e: '100%'
+    integration: '0%'
+    unit: '6%'
+  lines_of_code:
+    mission_creation: 452
+    mission_completion: 243
+
+recommendations:
+  immediate: # 必须在生产前修复
+    - action: '添加后端单元测试'
+      priority: P1
+      effort: '2-3 days'
+      refs:
+        - 'src/backend/validation/mission-validation.spec.ts'
+        - 'src/backend/services/mission.service.spec.ts'
+      description: |
+        优先覆盖验证逻辑和业务逻辑单元测试。
+        目标覆盖率：> 80% 核心业务逻辑。
+
+    - action: '添加 API 集成测试'
+      priority: P1
+      effort: '1-2 days'
+      refs:
+        - 'tests/integration/missions-api.test.ts'
+      description: |
+        创建 API 层集成测试，验证 API 契约。
+        覆盖场景：创建任务、完成任务、用户统计更新。
+
+  future: # 可以稍后处理
+    - action: '实施性能基准测试'
+      priority: P2
+      effort: '2-3 days'
+      refs:
+        - 'tests/performance/load-test.k6.ts'
+      description: |
+        使用 k6 实施负载测试。
+        基准：API p95 < 200ms，支持 100 并发用户。
+
+    - action: '增强安全测试覆盖'
+      priority: P2
+      effort: '1-2 days'
+      refs:
+        - 'tests/security/injection.test.ts'
+        - 'tests/security/rate-limiting.test.ts'
+      description: |
+        添加 SQL 注入、XSS、速率限制测试。
+        验证输入清理和授权机制。
+
+    - action: '优化测试执行时间'
+      priority: P3
+      effort: '0.5 day'
+      refs:
+        - 'playwright.config.ts'
+      description: |
+        启用并行测试执行（fullyParallel: true）。
+        预期将执行时间从 36.8s 减少到 ~15s。
+
+    - action: '添加可访问性测试'
+      priority: P3
+      effort: '1 day'
+      refs:
+        - 'tests/e2e/accessibility.spec.ts'
+      description: |
+        使用 axe-playwright 添加可访问性测试。
+        验证 ARIA 属性、键盘导航、颜色对比度。
+
+traceability_reference:
+  trace_matrix: 'docs/qa/assessments/e2e-trace-20251223.md'
+  requirements_document: 'E2E Tests (Reverse Engineered)'
+  coverage_details:
+    total_requirements: 17
+    fully_covered: 17
+    partially_covered: 0
+    not_covered: 0
+
+compliance_check:
+  coding_standards: PASS
+  project_structure: PASS
+  testing_strategy: CONCERNS
+  acceptance_criteria: PASS
+
+notes: |
+  总体评估：
+  - ✅ 优势：完整的 E2E 覆盖、清晰的测试文档、良好的测试隔离
+  - ⚠️ 改进：测试金字塔不平衡、缺少单元/集成测试
+  - ⚠️ 关注：安全性和性能测试不足
+
+  建议优先级：
+  - P0（立即）：保持现有 E2E 测试质量 ✅
+  - P1（本周）：添加单元测试和 API 集成测试
+  - P2（本月）：实施性能测试和增强安全测试
+  - P3（本季度）：优化测试执行、添加可访问性测试
+
+  这是一个高质量的 E2E 测试套件，所有核心功能都有完整的端到端覆盖。
+  主要问题是测试层次结构不平衡，需要补充单元测试和集成测试以提高测试效率和维护性。
