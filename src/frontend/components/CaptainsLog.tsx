@@ -10,14 +10,11 @@ interface CaptainsLogProps {
 }
 
 const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { logs, isLoading, error, refetch } = useHistory(userId);
 
-  // Weekly Chart Data
-  const days =
-    language === "zh"
-      ? ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
-      : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  // 星期标签 / Week day labels
+  const days = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 
   const todayIndex = new Date().getDay();
 
@@ -57,9 +54,9 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
       let dateLabel = date.toLocaleDateString();
 
       if (date.toDateString() === today.toDateString()) {
-        dateLabel = language === "zh" ? "今天" : "Today";
+        dateLabel = "今天";
       } else if (date.toDateString() === yesterday.toDateString()) {
-        dateLabel = language === "zh" ? "昨天" : "Yesterday";
+        dateLabel = "昨天";
       } else {
         // Futuristic Date Format
         dateLabel = `Stardate ${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
@@ -212,7 +209,7 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
           {isLoading && (
             <div className="text-center py-10 opacity-50">
               <div className="font-mono text-slate-400 animate-pulse">
-                {language === "zh" ? "加载中..." : "Loading..."}
+                加载中...
               </div>
             </div>
           )}
@@ -220,13 +217,13 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
           {error && (
             <div className="text-center py-10">
               <div className="font-mono text-red-400 mb-2">
-                {language === "zh" ? "加载失败" : "Failed to load"}
+                加载失败
               </div>
               <button
                 onClick={() => refetch()}
                 className="text-neon-cyan hover:underline text-sm"
               >
-                {language === "zh" ? "重试" : "Retry"}
+                重试
               </button>
             </div>
           )}

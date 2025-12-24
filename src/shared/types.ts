@@ -133,6 +133,22 @@ export enum DbRank {
   COMMANDER = "COMMANDER",
 }
 
+// 军衔中文映射 / Rank Chinese translations
+export const RANK_ZH_MAP: Record<string, string> = {
+  CADET: "学员",
+  LIEUTENANT: "中尉",
+  CAPTAIN: "舰长",
+  COMMANDER: "指挥官",
+};
+
+/**
+ * 将英文军衔转换为中文
+ * Convert English rank to Chinese
+ */
+export function getRankInChinese(rank: string): string {
+  return RANK_ZH_MAP[rank] || rank;
+}
+
 // 工具类型
 // Utility types
 

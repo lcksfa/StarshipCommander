@@ -28,22 +28,18 @@ interface ProfileEditProps {
  */
 export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
   const { user, updateProfile } = useAuth();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // Form state / 表单状态
   const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [preferredLang, setPreferredLang] = useState<"en" | "zh">(
-    user?.preferredLang || language
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update form when user data changes / 当用户数据变化时更新表单
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || "");
-      setPreferredLang(user.preferredLang || language);
     }
-  }, [user, language]);
+  }, [user]);
 
   /**
    * Handle form submission
@@ -55,18 +51,12 @@ export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
     // Validation / 验证
     const trimmedDisplayName = displayName.trim();
     if (!trimmedDisplayName) {
-      toast.error(
-        language === "zh" ? "请输入显示名称" : "Please enter a display name"
-      );
+      toast.error("请输入显示名称");
       return;
     }
 
     if (trimmedDisplayName.length > 50) {
-      toast.error(
-        language === "zh"
-          ? "显示名称不能超过50个字符"
-          : "Display name must be less than 50 characters"
-      );
+      toast.error("显示名称不能超过50个字符");
       return;
     }
 
@@ -76,21 +66,17 @@ export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
       // Update profile / 更新资料
       await updateProfile({
         displayName: trimmedDisplayName,
-        preferredLang,
+        preferredLang: "zh", // 固定为中文 / Fixed to Chinese
       });
 
-      toast.success(
-        language === "zh" ? "资料更新成功！" : "Profile updated successfully!"
-      );
+      toast.success("资料更新成功！");
 
       // Close modal / 关闭模态框
       onClose();
     } catch (error) {
       // Error is already handled by AuthContext
       // 错误已由AuthContext处理
-      toast.error(
-        language === "zh" ? "更新失败，请重试" : "Update failed, please try again"
-      );
+      toast.error("更新失败，请重试");
     } finally {
       setIsSubmitting(false);
     }
@@ -119,7 +105,7 @@ export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <User className="w-5 h-5 text-neon-cyan" />
-            {language === "zh" ? "编辑资料" : "Edit Profile"}
+            {t.profile_edit_title}
           </h2>
           <button
             onClick={onClose}
@@ -138,7 +124,7 @@ export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
               htmlFor="displayName"
               className="block text-sm font-medium text-slate-300 mb-2"
             >
-              {language === "zh" ? "显示名称" : "Display Name"}
+              {t.auth_display_name_label}
             </label>
             <input
               id="displayName"
@@ -146,39 +132,13 @@ export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:border-transparent transition-all"
-              placeholder={language === "zh" ? "指挥官" : "Commander"}
+              placeholder={t.auth_display_name_placeholder}
               maxLength={50}
               disabled={isSubmitting}
             />
             <p className="mt-1 text-xs text-slate-500">
-              {language === "zh"
-                ? "这是其他玩家看到的名称"
-                : "This is the name other players will see"}
+              {t.profile_display_name_hint}
             </p>
-          </div>
-
-          {/* Preferred Language / 首选语言 */}
-          <div>
-            <label
-              htmlFor="preferredLang"
-              className="block text-sm font-medium text-slate-300 mb-2"
-            >
-              {language === "zh" ? "首选语言" : "Preferred Language"}
-            </label>
-            <select
-              id="preferredLang"
-              value={preferredLang}
-              onChange={(e) => setPreferredLang(e.target.value as "en" | "zh")}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:border-transparent transition-all"
-              disabled={isSubmitting}
-            >
-              <option value="zh" className="bg-slate-900">
-                中文
-              </option>
-              <option value="en" className="bg-slate-900">
-                English
-              </option>
-            </select>
           </div>
 
           {/* Action Buttons / 操作按钮 */}
@@ -189,7 +149,7 @@ export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
               disabled={isSubmitting}
               className="flex-1 px-4 py-3 bg-white/5 text-slate-300 rounded-xl font-bold hover:bg-white/10 transition-all disabled:opacity-50"
             >
-              {language === "zh" ? "取消" : "Cancel"}
+              {t.cancel}
             </button>
             <button
               type="submit"
@@ -199,12 +159,12 @@ export function ProfileEdit({ isOpen, onClose }: ProfileEditProps) {
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {language === "zh" ? "保存中..." : "Saving..."}
+                  {t.profile_saving}
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  {language === "zh" ? "保存" : "Save"}
+                  {t.profile_save}
                 </>
               )}
             </button>

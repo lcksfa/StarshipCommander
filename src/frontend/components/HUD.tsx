@@ -1,7 +1,8 @@
 import React from "react";
-import { UserStats } from "../types";
+import { UserStats, getRankInChinese } from "../types";
 import { Coins, Zap } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import AnimatedNumber from "./AnimatedNumber";
 
 interface HUDProps {
   stats: UserStats;
@@ -39,9 +40,11 @@ const HUD: React.FC<HUDProps> = ({ stats, compact = false }) => {
           {/* Right: Coins */}
           <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-neon-gold/30">
             <Coins className="text-neon-gold" size={16} fill="#facc15" />
-            <span className="text-neon-gold font-black text-lg leading-none">
-              {stats.coins}
-            </span>
+            <AnimatedNumber
+              value={stats.coins}
+              duration={800}
+              className="text-neon-gold font-black text-lg leading-none"
+            />
           </div>
         </div>
 
@@ -83,7 +86,7 @@ const HUD: React.FC<HUDProps> = ({ stats, compact = false }) => {
                 {t.rank_captain}
               </div>
               <div className="text-white font-black text-xl leading-none tracking-wide drop-shadow-md">
-                {stats.rank}
+                {getRankInChinese(stats.rank)}
               </div>
             </div>
 
@@ -96,8 +99,8 @@ const HUD: React.FC<HUDProps> = ({ stats, compact = false }) => {
                 <span>
                   {t.level} {stats.level}
                 </span>
-                <span className="text-slate-500 text-2xl font-bold">
-                  // {stats.rank}
+                <span className="text-neon-purple text-xl font-bold">
+                  {getRankInChinese(stats.rank)}
                 </span>
               </div>
             </div>
@@ -110,9 +113,11 @@ const HUD: React.FC<HUDProps> = ({ stats, compact = false }) => {
               size={24}
               fill="#facc15"
             />
-            <span className="text-neon-gold font-black tracking-wide leading-none text-2xl md:text-3xl">
-              {stats.coins}
-            </span>
+            <AnimatedNumber
+              value={stats.coins}
+              duration={800}
+              className="text-neon-gold font-black tracking-wide leading-none text-2xl md:text-3xl"
+            />
           </div>
         </div>
 
@@ -123,7 +128,7 @@ const HUD: React.FC<HUDProps> = ({ stats, compact = false }) => {
               <Zap size={14} fill="currentColor" /> {t.power_level}
             </span>
             <span className="text-white/80">
-              {stats.currentXp} / {stats.maxXp} XP
+              <AnimatedNumber value={stats.currentXp} duration={800} /> / {stats.maxXp} XP
             </span>
           </div>
 

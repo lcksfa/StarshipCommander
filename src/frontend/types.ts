@@ -14,6 +14,26 @@ export type {
 
 export { Tab };
 
+// 军衔中文映射 / Rank Chinese translations
+export const RANK_ZH_MAP: Record<string, string> = {
+  Cadet: "学员",
+  Ensign: "少尉",
+  Lieutenant: "中尉",
+  Commander: "指挥官",
+  Captain: "舰长",
+  Admiral: "上将",
+  "Galactic Hero": "银河英雄",
+  "Galactic Legend": "银河传奇",
+};
+
+/**
+ * 将英文军衔转换为中文
+ * Convert English rank to Chinese
+ */
+export function getRankInChinese(rank: string): string {
+  return RANK_ZH_MAP[rank] || rank;
+}
+
 // 前端专用类型
 // Frontend-specific types
 

@@ -34,21 +34,21 @@ interface AddMissionModalProps {
 const DIFFICULTIES = [
   {
     id: "easy",
-    label: "Cadet",
+    label: "学员",
     coinReward: 1,   // EASY: 1 coin
     xpReward: 5,     // EASY: 5 XP
     color: "bg-green-500",
   },
   {
     id: "medium",
-    label: "Lieutenant",
+    label: "中尉",
     coinReward: 2,   // MEDIUM: 2 coins
     xpReward: 10,    // MEDIUM: 10 XP
     color: "bg-blue-500",
   },
   {
     id: "hard",
-    label: "Captain",
+    label: "舰长",
     coinReward: 5,   // HARD: 5 coins
     xpReward: 20,    // HARD: 20 XP
     color: "bg-orange-500",

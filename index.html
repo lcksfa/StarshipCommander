@@ -1,14 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Starship Commander</title>
+        <title>星际指挥官</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <!-- 站酷快乐体 - 适合9岁小朋友的圆润中文字体 / ZCOOL KuaiLe - Rounded font suitable for 9-year-olds -->
         <link
-            href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Nunito:wght@400;700;900&display=swap"
+            href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Fredoka:wght@300;400;600;700&family=Nunito:wght@400;700;900&display=swap"
             rel="stylesheet"
         />
         <script>
@@ -17,10 +18,11 @@
                     extend: {
                         fontFamily: {
                             sans: [
+                                '"ZCOOL KuaiLe"', // 站酷快乐体 - 圆润可爱，适合儿童 / Rounded font suitable for kids
                                 "Fredoka",
                                 "Nunito",
-                                "PingFang SC",
-                                "Microsoft YaHei",
+                                '"PingFang SC"',
+                                '"Microsoft YaHei"',
                                 "sans-serif",
                             ],
                         },
@@ -83,7 +85,7 @@
                 width: 100vw;
             }
 
-            /* Enforce Chunky Weights for sci-fi feel, especially for Chinese */
+            /* 为中文科幻风格使用粗体字重 / Enforce Chunky Weights for sci-fi feel */
             h1,
             h2,
             h3,
@@ -95,7 +97,7 @@
                 font-weight: 700 !important;
             }
 
-            /* Custom Scrollbar for the mission list */
+            /* 任务列表自定义滚动条 / Custom Scrollbar for the mission list */
             ::-webkit-scrollbar {
                 width: 6px;
             }
@@ -110,7 +112,7 @@
                 background: rgba(34, 211, 238, 0.5);
             }
 
-            /* Energy Bar Stripes */
+            /* 能量条条纹 / Energy Bar Stripes */
             .bg-stripes {
                 background-image: linear-gradient(
                     45deg,

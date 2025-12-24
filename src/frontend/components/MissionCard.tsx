@@ -15,12 +15,14 @@ import { useLanguage } from "../contexts/LanguageContext";
 interface MissionCardProps {
   mission: Mission;
   onComplete: (id: string) => void;
+  onOpenCompleteModal: (mission: Mission) => void; // 打开完成弹窗 / Open complete modal
   userId: string; // 添加 userId 参数 / Add userId parameter
 }
 
 const MissionCard: React.FC<MissionCardProps> = ({
   mission,
   onComplete,
+  onOpenCompleteModal,
   userId,
 }) => {
   const { t } = useLanguage();
@@ -35,26 +37,11 @@ const MissionCard: React.FC<MissionCardProps> = ({
 
   const config = categoryConfig[mission.category] || categoryConfig.study;
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     if (mission.isCompleted) return;
 
-    try {
-      const result = await completeMission(mission.id, userId);
-
-      // 触发父组件回调以刷新数据和显示覆盖层
-      onComplete(mission.id, result);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-
-      // eslint-disable-next-line no-console
-      console.error("Failed to complete mission:", error);
-
-      // 显示错误提示（只保留错误提示，移除成功消息避免与覆盖层冲突）
-      alert(
-        `❌ ${t.card_error || "Failed to complete mission"}: ${errorMessage}`,
-      );
-    }
+    // 打开任务完成确认弹窗 / Open mission complete confirmation modal
+    onOpenCompleteModal(mission);
   };
 
   return (

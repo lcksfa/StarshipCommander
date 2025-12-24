@@ -7,12 +7,12 @@ import Sidebar from "./components/Sidebar";
 import Hologram from "./components/Hologram";
 import AddMissionModal from "./components/AddMissionModal";
 import CaptainsLog from "./components/CaptainsLog";
-import SuccessOverlay from "./components/SuccessOverlay";
+import MissionCompleteModal from "./components/MissionCompleteModal";
 import { ProfileEdit } from "./components/ProfileEdit";
 import { Toaster, toast } from "sonner";
-import { Tab, MissionCategory } from "./types";
+import { Tab, MissionCategory, getRankInChinese, Mission } from "./types";
 import { INITIAL_STATS } from "./constants";
-import { useAllMissions, useUserStats } from "./hooks/useMissions";
+import { useAllMissions, useUserStats, useCompleteMission } from "./hooks/useMissions";
 import { apiClient } from "./lib/trpc";
 import { useAuth } from "./contexts/AuthContext";
 import { useLanguage } from "./contexts/LanguageContext";
@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 
 const App: React.FC = () => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useAuth(); // 使用认证系统的用户信息 / Use authenticated user info
 
   // 使用认证用户的 ID / Use authenticated user ID
@@ -59,11 +59,12 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false); // Profile edit modal / 资料编辑模态框
 
-  // New State for Mission Accomplished Overlay
-  const [successData, setSuccessData] = useState<{
-    xp: number;
-    coins: number;
-  } | null>(null);
+  // 任务完成弹窗状态 / Mission complete modal state
+  const [completeModalMission, setCompleteModalMission] = useState<Mission | null>(null);
+  const [isCompletingMission, setIsCompletingMission] = useState(false);
+
+  // 任务完成 hook / Mission complete hook
+  const { completeMission } = useCompleteMission();
 
   // 默认统计数据（如果 API 未加载）
   const displayStats = stats || INITIAL_STATS;
@@ -83,26 +84,50 @@ const App: React.FC = () => {
   // Simulation: Hangar unlocks at level 2.
   const isHangarUnlocked = displayStats.level >= 2;
 
-  // 任务完成后的处理：显示覆盖层 + 刷新数据
+  // 打开任务完成确认弹窗 / Open mission complete confirmation modal
+  const handleOpenCompleteModal = (mission: Mission) => {
+    setCompleteModalMission(mission);
+  };
+
+  // 关闭任务完成弹窗 / Close mission complete modal
+  const handleCloseCompleteModal = () => {
+    setCompleteModalMission(null);
+  };
+
+  // 确认完成任务 / Confirm mission complete
+  const handleConfirmMissionComplete = async () => {
+    if (!completeModalMission || !userId) return;
+
+    setIsCompletingMission(true);
+
+    try {
+      const result = await completeMission(completeModalMission.id, userId);
+
+      // 关闭弹窗 / Close modal
+      setCompleteModalMission(null);
+
+      // 刷新数据（触发 HUD 动画）/ Refresh data (triggers HUD animation)
+      await Promise.all([refetchMissions(), refetchStats()]);
+
+      // 如果有升级信息，显示升级动画 / Show level up animation if applicable
+      if (result?.levelUp) {
+        setShowLevelUp(true);
+      }
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      toast.error("任务完成失败", {
+        description: errorMessage,
+      });
+    } finally {
+      setIsCompletingMission(false);
+    }
+  };
+
+  // 任务完成后的处理：显示覆盖层 + 刷新数据（保留兼容性）
   const handleMissionComplete = async (id: string, result?: any) => {
-    // 1. 显示奖励覆盖层
-    const mission = displayMissions.find((m) => m.id === id);
-    if (mission) {
-      setSuccessData({ xp: mission.xpReward, coins: mission.coinReward });
-
-      // 等待 2 秒后隐藏覆盖层
-      setTimeout(() => {
-        setSuccessData(null);
-      }, 2000);
-    }
-
-    // 2. 刷新任务和用户统计数据
-    await Promise.all([refetchMissions(), refetchStats()]);
-
-    // 3. 如果有升级信息，显示升级动画
-    if (result?.levelUp) {
-      setShowLevelUp(true);
-    }
+    // 这个函数现在由 handleConfirmMissionComplete 处理
+    // 保留空实现以避免错误 / This is now handled by handleConfirmMissionComplete
+    // Kept empty to avoid errors
   };
 
   const handleAddMission = async (missionData: {
@@ -115,9 +140,7 @@ const App: React.FC = () => {
     isDaily: boolean;
   }) => {
     // 显示加载提示 / Show loading toast
-    const loadingToast = toast.loading(
-      language === "zh" ? "正在创建任务..." : "Creating mission..."
-    );
+    const loadingToast = toast.loading("正在创建任务...");
 
     try {
       // 调用 API 创建任务 / Call API to create mission
@@ -133,17 +156,11 @@ const App: React.FC = () => {
       });
 
       // 成功提示 / Success toast
-      toast.success(
-        language === "zh" ? "任务创建成功！" : "Mission created successfully!",
-        {
-          id: loadingToast,
-          description:
-            language === "zh"
-              ? `"${missionData.title}" 已添加到您的任务列表`
-              : `"${missionData.title}" has been added to your mission list`,
-          duration: 4000,
-        }
-      );
+      toast.success("任务创建成功！", {
+        id: loadingToast,
+        description: `"${missionData.title}" 已添加到您的任务列表`,
+        duration: 4000,
+      });
 
       // 关闭模态框并刷新任务列表
       // Close modal and refresh mission list
@@ -160,7 +177,7 @@ const App: React.FC = () => {
         id: loadingToast,
         description: errorMessage,
         action: {
-          label: language === "zh" ? "重试" : "Retry",
+          label: "重试",
           onClick: () => handleAddMission(missionData),
         },
       });
@@ -476,7 +493,7 @@ const App: React.FC = () => {
             <div className="px-4">
               {missionsLoading ? (
                 <div className="text-center py-10 text-slate-400">
-                  {language === "zh" ? "加载中..." : "Loading..."}
+                  加载中...
                 </div>
               ) : (
                 <div className="flex flex-col gap-5 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
@@ -485,6 +502,7 @@ const App: React.FC = () => {
                       key={mission.id}
                       mission={mission}
                       onComplete={handleMissionComplete}
+                      onOpenCompleteModal={handleOpenCompleteModal}
                       userId={userId}
                     />
                   ))}
@@ -517,13 +535,13 @@ const App: React.FC = () => {
                   <button
                     onClick={() => setIsProfileEditOpen(true)}
                     className="p-2 rounded-full bg-white/10 hover:bg-neon-cyan/20 text-white/60 hover:text-neon-cyan transition-all group"
-                    title={language === "zh" ? "编辑资料" : "Edit Profile"}
+                    title={t.profile_edit_title}
                   >
                     <Edit className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   </button>
                 </div>
                 <p className="text-neon-cyan font-bold mb-6 md:text-xl">
-                  {t.level} {displayStats.level} {displayStats.rank}
+                  {t.level} {displayStats.level} {getRankInChinese(displayStats.rank)}
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 md:gap-8 mb-8">
@@ -659,10 +677,19 @@ const App: React.FC = () => {
         onAdd={handleAddMission}
       />
 
-      {/* Mission Accomplished Overlay */}
-      {successData && (
+      {/* Mission Complete Modal */}
+      <MissionCompleteModal
+        isOpen={completeModalMission !== null}
+        mission={completeModalMission}
+        onConfirm={handleConfirmMissionComplete}
+        onClose={handleCloseCompleteModal}
+        isLoading={isCompletingMission}
+      />
+
+      {/* Mission Accomplished Overlay - 已移除，流程简化 / Removed for simplified flow */}
+      {/* {successData && (
         <SuccessOverlay xp={successData.xp} coins={successData.coins} />
-      )}
+      )} */}
 
       {/* Level Up Overlay */}
       {showLevelUp && (
