@@ -6,7 +6,7 @@ import {
   MissionCategory,
   UserStats,
   LocalizedText,
-} from "../../shared/types";
+} from "../../shared/types.js";
 import { Prisma } from "@prisma/client";
 
 // 数据库实体类型 - Prisma 生成的类型

@@ -8,8 +8,8 @@ import {
   hashPassword,
   verifyPassword,
   validatePasswordStrength,
-} from "../utils/password.util";
-import { jwtConfig, type JWTPayload, type TokenPair } from "../config/jwt.config";
+} from "../utils/password.util.js";
+import { jwtConfig, type JWTPayload, type TokenPair } from "../config/jwt.config.js";
 
 /**
  * Authentication Service / 认证服务

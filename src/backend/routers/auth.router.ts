@@ -4,15 +4,15 @@
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import type { Context } from "../context";
-import { authService } from "../services/auth.service";
+import type { Context } from "../context.js";
+import { authService } from "../services/auth.service.js";
 import {
   registerSchema,
   loginSchema,
   refreshTokenSchema,
   logoutSchema,
   getCurrentUserSchema,
-} from "../validation/auth-validation";
+} from "../validation/auth-validation.js";
 
 /**
  * Create authentication router

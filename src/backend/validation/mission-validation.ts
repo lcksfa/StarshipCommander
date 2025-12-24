@@ -10,7 +10,7 @@ import {
   MISSION_DIFFICULTY_CONFIG,
   type MissionDifficulty,
   getRewardRange,
-} from "../config/mission-rules";
+} from "../config/mission-rules.js";
 
 /**
  * Validate that rewards match the difficulty level
