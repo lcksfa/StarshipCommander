@@ -13,6 +13,9 @@ import { Tab, MissionCategory } from "./types";
 import { INITIAL_STATS } from "./constants";
 import { useAllMissions, useUserStats } from "./hooks/useMissions";
 import { apiClient } from "./lib/trpc";
+import { useAuth } from "./contexts/AuthContext";
+import { useLanguage } from "./contexts/LanguageContext";
+import { getErrorMessage, getErrorTitle, logError } from "./utils/error-utils";
 import {
   Star,
   Plus,
@@ -26,45 +29,15 @@ import {
   Wrench,
   Settings,
 } from "lucide-react";
-import { useLanguage } from "./contexts/LanguageContext";
-import { getErrorMessage, getErrorTitle, logError } from "./utils/error-utils";
 
 const App: React.FC = () => {
   const { language, t } = useLanguage();
+  const { user } = useAuth(); // 使用认证系统的用户信息 / Use authenticated user info
 
-  // 用户版本控制：当数据重置时自动更新
-  // User version control: auto-update when data is reset
-  const USER_STORAGE_VERSION = "v2"; // 版本号，数据重置时修改此值
+  // 使用认证用户的 ID / Use authenticated user ID
+  const userId = user?.id;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [userId, _setUserId] = useState(() => {
-    const version = localStorage.getItem("starship-user-version");
-    const stored = localStorage.getItem("starship-user-id");
-
-    // 如果版本不匹配或没有用户 ID，重置为默认用户
-    // If version mismatch or no userId, reset to default user
-    if (version !== USER_STORAGE_VERSION || !stored) {
-      const defaultUserId = "user_1_1766541951100_0x4zrc";
-      localStorage.setItem("starship-user-id", defaultUserId);
-      localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
-      console.log("🔄 用户 ID 已重置 / User ID reset:", defaultUserId);
-      return defaultUserId;
-    }
-
-    return stored;
-  });
-
-  // 如果获取用户统计失败（用户不存在），重置用户 ID
-  // If fetching user stats fails (user not exist), reset userId
-  // const handleUserNotFound = () => {
-  //   const defaultUserId = "user_1_1766541951100_0x4zrc";
-  //   localStorage.setItem("starship-user-id", defaultUserId);
-  //   localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
-  //   setUserId(defaultUserId);
-  //   console.log("🔄 用户不存在，已重置为默认用户 / User not found, reset to default");
-  // };
-
-  // 使用真实 API 获取数据
+  // 使用真实 API 获取数据 / Use real API to fetch data
   const {
     missions,
     isLoading: missionsLoading,

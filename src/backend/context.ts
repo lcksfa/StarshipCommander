@@ -4,6 +4,7 @@
 
 import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { IncomingMessage } from "http";
+import { authService } from "./services/auth.service";
 
 /**
  * User interface / 用户接口
@@ -52,38 +53,59 @@ export async function createPublicContext({
  * Extract user information from request
  * 从请求中提取用户信息
  *
- * TODO: Implement JWT or session validation
- * TODO: 实现 JWT 或 session 验证
- *
- * Current implementation: Uses custom header (temporary solution)
- * 当前实现：使用自定义header（临时方案）
+ * Supports two authentication methods:
+ * 支持两种认证方式：
+ * 1. JWT Bearer token (preferred) / JWT Bearer token（推荐）
+ * 2. x-user-id header (for backward compatibility) / x-user-id header（向后兼容）
  */
 async function getUserFromRequest(
   req: IncomingMessage
 ): Promise<User | null> {
-  // Temporary solution: Get userId from custom header
-  // 临时方案：从自定义header获取userId
-  const userId = req.headers["x-user-id"] as string;
+  try {
+    // Method 1: Try JWT Bearer token first / 方法1：首先尝试 JWT Bearer token
+    const authHeader = req.headers["authorization"];
 
-  if (!userId) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7); // Remove "Bearer " prefix / 移除 "Bearer " 前缀
+
+      try {
+        // Verify JWT token / 验证 JWT token
+        const payload = await authService.verifyAccessToken(token);
+
+        return {
+          id: payload.userId,
+          email: payload.email,
+          role: "user",
+        };
+      } catch (error) {
+        // Token verification failed, fall through to method 2
+        // Token 验证失败，回退到方法2
+         
+        console.error("JWT verification failed:", error);
+      }
+    }
+
+    // Method 2: Fallback to x-user-id header (backward compatibility)
+    // 方法2：回退到 x-user-id header（向后兼容）
+    const userId = req.headers["x-user-id"] as string;
+
+    if (userId) {
+      // TODO: Verify user exists in database
+      // TODO: 验证用户是否存在于数据库
+      return {
+        id: userId,
+        email: `${userId}@example.com`, // Temporary email / 临时邮箱
+        role: "user",
+      };
+    }
+
+    // No authentication found / 未找到认证信息
+    return null;
+  } catch (error) {
+     
+    console.error("Error extracting user from request:", error);
     return null;
   }
-
-  // Verify user exists in database (optional, can be added later)
-  // 验证用户是否存在于数据库（可选，后续可添加）
-  // const user = await prisma.userStats.findUnique({
-  //   where: { userId }
-  // });
-  //
-  // if (!user) {
-  //   return null;
-  // }
-
-  return {
-    id: userId,
-    email: `${userId}@example.com`, // Temporary email / 临时邮箱
-    role: "user",
-  };
 }
 
 /**

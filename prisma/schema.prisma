@@ -33,6 +33,61 @@ model Mission {
   @@map("missions")
 }
 
+// 用户模型 / User Model
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  passwordHash  String    // bcrypt hash
+
+  // Profile information / 个人信息
+  displayName   String?
+  avatar        String?
+  preferredLang  Language  @default(zh)
+
+  // Account status / 账户状态
+  isActive      Boolean   @default(true)
+  isVerified    Boolean   @default(false)
+
+  // Timestamps / 时间戳
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt    DateTime?
+
+  // Relations / 关系
+  stats         UserStats?  @relation("UserStats")
+  sessions      Session[]
+
+  @@map("users")
+}
+
+// 会话模型 / Session Model
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+
+  // Token information / Token 信息
+  token         String   @unique
+  refreshToken  String?  @unique
+
+  // Device and location info / 设备和位置信息
+  userAgent     String?
+  ipAddress     String?
+
+  // Expiration / 过期时间
+  expiresAt     DateTime
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations / 关系
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
 // 用户统计模型 / User Stats Model
 model UserStats {
   id                    String   @id @default(cuid())
@@ -60,6 +115,9 @@ model UserStats {
 
   achievements         UserAchievement[]
   missionHistory       MissionHistory[]
+
+  // NEW: Add relation to User / 新增：关联到 User
+  user                 User     @relation("UserStats", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

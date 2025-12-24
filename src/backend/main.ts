@@ -11,6 +11,7 @@ import * as expressAdapter from "@trpc/server/adapters/express";
 import { z } from "zod";
 import { createContext, type Context } from "./context";
 import { createMissionSchema } from "./validation/mission-validation";
+import { createAuthRouter } from "./routers/auth.router";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -132,6 +133,8 @@ async function bootstrap() {
       framework: "NestJS + tRPC",
       version: "2.0.0",
     })),
+
+    auth: createAuthRouter(t),
 
     missions: router({
       createMission: protectedProcedure
