@@ -127,6 +127,11 @@ export interface AuthContextValue {
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   clearError: () => void;
+  updateProfile: (data: {
+    displayName?: string;
+    username?: string;
+    preferredLang?: "en" | "zh";
+  }) => Promise<User>;
 }
 
 /**

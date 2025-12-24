@@ -2,6 +2,7 @@ import React from "react";
 import { Tab, UserStats } from "../types";
 import { Rocket, Wrench, UserCircle2, Moon, ClipboardList } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface SidebarProps {
   currentTab: Tab;
@@ -15,6 +16,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   stats,
 }) => {
   const { language, setLanguage, t } = useLanguage();
+  const { user } = useAuth(); // 获取当前用户信息 / Get current user info
 
   const navItems = [
     { id: Tab.MISSIONS, icon: Rocket, label: t.nav_missions },
@@ -49,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <div className="text-white font-bold text-sm">
-              {t.rank_captain} Alex
+              {t.rank_captain} {user?.displayName || user?.username || t.user_anonymous || "指挥官"}
             </div>
             <div className="text-neon-cyan text-xs font-bold uppercase">
               {stats.rank}

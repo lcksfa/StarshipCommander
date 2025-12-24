@@ -271,6 +271,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   };
 
+  /**
+   * Update user profile
+   * 更新用户资料
+   */
+  const updateProfile = async (data: {
+    displayName?: string;
+    username?: string;
+    preferredLang?: "en" | "zh";
+  }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const updatedUser = await authApi.updateProfile(data);
+
+      // Update user state / 更新用户状态
+      setUser(updatedUser);
+
+      return updatedUser;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Profile update failed";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value: AuthContextValue = {
     user,
     isAuthenticated: !!user,
@@ -281,6 +310,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     refreshToken,
     clearError,
+    updateProfile,
   };
 
   return (

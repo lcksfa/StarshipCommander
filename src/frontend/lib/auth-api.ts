@@ -331,6 +331,44 @@ class AuthApiClient {
   }
 
   /**
+   * Update user profile
+   * 更新用户资料
+   *
+   * @param data - Profile update data / 资料更新数据
+   * @returns Updated user object / 更新后的用户对象
+   *
+   * @example
+   * const user = await authApi.updateProfile({ displayName: "New Name" });
+   */
+  async updateProfile(data: {
+    displayName?: string;
+    username?: string;
+    preferredLang?: "en" | "zh";
+  }): Promise<User> {
+    const response = await this.call<ApiResponse<{ user: User }>>(
+      "/auth.updateProfile",
+      data
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error?.message || "Failed to update profile");
+    }
+
+    // Update stored user data / 更新存储的用户数据
+    const authData = this.getStoredAuthData();
+    if (authData) {
+      this.storeAuthData(
+        authData.accessToken,
+        authData.refreshToken,
+        response.data.user,
+        authData.expiresIn
+      );
+    }
+
+    return response.data.user;
+  }
+
+  /**
    * Get stored access token
    * 获取存储的访问令牌
    */

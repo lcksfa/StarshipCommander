@@ -8,6 +8,7 @@ import Hologram from "./components/Hologram";
 import AddMissionModal from "./components/AddMissionModal";
 import CaptainsLog from "./components/CaptainsLog";
 import SuccessOverlay from "./components/SuccessOverlay";
+import { ProfileEdit } from "./components/ProfileEdit";
 import { Toaster, toast } from "sonner";
 import { Tab, MissionCategory } from "./types";
 import { INITIAL_STATS } from "./constants";
@@ -28,6 +29,7 @@ import {
   Palette,
   Wrench,
   Settings,
+  Edit,
 } from "lucide-react";
 
 const App: React.FC = () => {
@@ -55,6 +57,7 @@ const App: React.FC = () => {
   );
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProfileEditOpen, setIsProfileEditOpen] = useState(false); // Profile edit modal / 资料编辑模态框
 
   // New State for Mission Accomplished Overlay
   const [successData, setSuccessData] = useState<{
@@ -505,9 +508,20 @@ const App: React.FC = () => {
                 <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-tr from-neon-cyan to-neon-purple rounded-full mx-auto mb-4 border-4 border-white/20 shadow-[0_0_20px_rgba(192,132,252,0.4)] flex items-center justify-center text-4xl md:text-6xl">
                   🧑‍🚀
                 </div>
-                <h2 className="text-2xl md:text-4xl font-bold text-white">
-                  {t.rank_captain} Alex
-                </h2>
+
+                {/* Profile Header with Edit Button / 带编辑按钮的资料标题 */}
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <h2 className="text-2xl md:text-4xl font-bold text-white">
+                    {t.rank_captain} {user?.displayName || user?.username || t.user_anonymous || "指挥官"}
+                  </h2>
+                  <button
+                    onClick={() => setIsProfileEditOpen(true)}
+                    className="p-2 rounded-full bg-white/10 hover:bg-neon-cyan/20 text-white/60 hover:text-neon-cyan transition-all group"
+                    title={language === "zh" ? "编辑资料" : "Edit Profile"}
+                  >
+                    <Edit className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
                 <p className="text-neon-cyan font-bold mb-6 md:text-xl">
                   {t.level} {displayStats.level} {displayStats.rank}
                 </p>
@@ -667,6 +681,12 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Profile Edit Modal / 资料编辑模态框 */}
+      <ProfileEdit
+        isOpen={isProfileEditOpen}
+        onClose={() => setIsProfileEditOpen(false)}
+      />
     </div>
   );
 };

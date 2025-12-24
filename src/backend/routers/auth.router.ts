@@ -151,6 +151,99 @@ export function createAuthRouter(t: any) {
       }),
 
     /**
+     * Update user profile
+     * 更新用户资料
+     *
+     * Protected endpoint / 受保护端点
+     */
+    updateProfile: protectedProcedure
+      .input(
+        z.object({
+          displayName: z.string().min(1).max(50).optional(),
+          username: z.string().min(2).max(30).optional(),
+          preferredLang: z.enum(["en", "zh"]).optional(),
+        })
+      )
+      .mutation(
+        async ({
+          input,
+          ctx,
+        }: {
+          input: {
+            displayName?: string;
+            username?: string;
+            preferredLang?: "en" | "zh";
+          };
+          ctx: Context & { user: any; prisma: any };
+        }) => {
+          try {
+            const { prisma, user } = ctx;
+
+            // Check if username is already taken by another user
+            // 检查用户名是否已被其他用户使用
+            if (input.username) {
+              const existingUser = await prisma.user.findFirst({
+                where: {
+                  username: input.username,
+                  NOT: { id: user.id },
+                },
+              });
+
+              if (existingUser) {
+                throw new TRPCError({
+                  code: "CONFLICT",
+                  message: "Username is already taken",
+                });
+              }
+            }
+
+            // Update user profile / 更新用户资料
+            const updatedUser = await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                ...(input.displayName !== undefined && {
+                  displayName: input.displayName,
+                }),
+                ...(input.username !== undefined && {
+                  username: input.username,
+                }),
+                ...(input.preferredLang !== undefined && {
+                  preferredLang: input.preferredLang,
+                }),
+              },
+              select: {
+                id: true,
+                email: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                preferredLang: true,
+                isActive: true,
+                isVerified: true,
+                createdAt: true,
+                lastLoginAt: true,
+              },
+            });
+
+            return {
+              success: true,
+              data: { user: updatedUser },
+              message: "Profile updated successfully",
+            };
+          } catch (error) {
+            if (error instanceof TRPCError) {
+              throw error;
+            }
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message:
+                error instanceof Error ? error.message : "Failed to update profile",
+            });
+          }
+        }
+      ),
+
+    /**
      * Get current user information
      * 获取当前用户信息
      *
