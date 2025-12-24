@@ -19,6 +19,7 @@ async function main() {
   await prisma.achievement.deleteMany();
   await prisma.mission.deleteMany();
   await prisma.userStats.deleteMany();
+  await prisma.user.deleteMany(); // 清理 User 表 / Clean User table
   console.log("✅ Data cleaned\n");
 
   // 配置 / Configuration
@@ -30,13 +31,28 @@ async function main() {
 
   const users = [];
   for (let i = 1; i <= USER_COUNT; i++) {
-    const user = await prisma.userStats.create({
+    // 1. 先创建 User 记录 / First create User record
+    const userId = `user_${i}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const userPasswordHash = "dummy_hash"; // 种子数据使用假密码 / Seed data uses dummy password
+
+    await prisma.user.create({
       data: {
-        userId: `user_${i}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        id: userId,
+        email: `user${i}@example.com`,
+        username: `player${i}`,
+        passwordHash: userPasswordHash,
+      },
+    });
+
+    // 2. 再创建 UserStats 记录 / Then create UserStats record
+    const userStats = await prisma.userStats.create({
+      data: {
+        userId: userId,
         preferredLang: "zh", // 默认中文 / Default to Chinese
         level: 1, // 初始等级为1 / Initial level is 1
         currentXp: 0, // XP 置零 / XP set to zero
-        maxXp: 100,
+        maxXp: 50, // 新系统：Level 1→2 需要 50 XP / New system: Level 1→2 needs 50 XP
+        rank: "Cadet", // 初始军衔 / Initial rank
         coins: 0, // 金币置零 / Coins set to zero
         totalMissionsCompleted: 0, // 完成任务数置零 / Completed missions set to zero
         totalXpEarned: 0, // 总获得XP置零 / Total XP earned set to zero
@@ -45,8 +61,8 @@ async function main() {
         lastActive: null, // 最后活动时间置空 / Last active set to null
       },
     });
-    users.push(user);
-    console.log(`  ✅ Created user: ${user.userId}`);
+    users.push(userStats);
+    console.log(`  ✅ Created user: ${userStats.userId}`);
   }
   console.log(`✅ Created ${users.length} user\n`);
 
@@ -54,6 +70,7 @@ async function main() {
   console.log(`📋 Creating missions...`);
 
   // 定义固定的任务 / Define fixed missions
+  // 使用新的奖励配置 / Using new reward configuration
   const fixedMissions = [
     {
       category: "STUDY" as const,
@@ -61,8 +78,8 @@ async function main() {
       description: "每天阅读 30 分钟，培养阅读习惯",
       emoji: "📚",
       difficulty: "EASY" as const,
-      xpReward: 25,
-      coinReward: 10,
+      xpReward: 12, // 新配置：12 XP / New config: 12 XP
+      coinReward: 6, // 新配置：6 coins / New config: 6 coins
       isDaily: true,
     },
     {
@@ -71,8 +88,8 @@ async function main() {
       description: "每天早上运动 20 分钟，保持健康",
       emoji: "💪",
       difficulty: "EASY" as const,
-      xpReward: 25,
-      coinReward: 10,
+      xpReward: 12, // 新配置：12 XP / New config: 12 XP
+      coinReward: 6, // 新配置：6 coins / New config: 6 coins
       isDaily: true,
     },
     {
@@ -81,8 +98,8 @@ async function main() {
       description: "整理个人房间，保持环境整洁",
       emoji: "🧹",
       difficulty: "MEDIUM" as const,
-      xpReward: 50,
-      coinReward: 25,
+      xpReward: 30, // 新配置：30 XP / New config: 30 XP
+      coinReward: 15, // 新配置：15 coins / New config: 15 coins
       isDaily: false,
     },
     {
@@ -91,8 +108,8 @@ async function main() {
       description: "练习绘画技巧，发挥创造力",
       emoji: "🎨",
       difficulty: "MEDIUM" as const,
-      xpReward: 50,
-      coinReward: 25,
+      xpReward: 30, // 新配置：30 XP / New config: 30 XP
+      coinReward: 15, // 新配置：15 coins / New config: 15 coins
       isDaily: false,
     },
   ];

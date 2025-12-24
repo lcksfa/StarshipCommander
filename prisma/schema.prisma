@@ -100,6 +100,7 @@ model UserStats {
   level                Int      @default(1)
   currentXp            Int      @default(0)
   maxXp                Int      @default(100)
+  rank                 String   @default("Cadet")
 
   // 货币系统 / Currency System
   coins                Int      @default(0)

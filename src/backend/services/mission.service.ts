@@ -34,6 +34,10 @@ import {
   DbMissionWithRelations,
   DbUserStats,
 } from "../types/prisma.types.js";
+import {
+  calculateLevelProgress,
+  calculateRank,
+} from "../config/level-system.js";
 
 /**
  * 从错误对象中提取错误消息
@@ -354,18 +358,28 @@ export class MissionService {
         const newCoins = userStats.coins + mission.coinReward;
         const newTotalMissions = userStats.totalMissionsCompleted + 1;
 
-        // 计算新等级
-        const newLevel = this.calculateLevel(newTotalXp);
-        const levelUp = newLevel > userStats.level;
+        // 使用新的等级系统计算正确的等级进度
+        // Calculate correct level progress using new level system
+        const levelProgress = calculateLevelProgress(newTotalXp);
+        const newRank = calculateRank(levelProgress.level);
+        const levelUp = levelProgress.level > userStats.level;
 
         await tx.userStats.update({
           where: { userId },
           data: {
-            currentXp: userStats.currentXp + mission.xpReward,
+            // 正确计算 currentXp：当前等级内的 XP（0 到 maxXp-1）
+            // Correctly calculate currentXp: XP within current level (0 to maxXp-1)
+            currentXp: levelProgress.currentXp,
+            // 动态更新 maxXp：随等级变化
+            // Dynamically update maxXp: varies with level
+            maxXp: levelProgress.maxXp,
             totalXpEarned: newTotalXp,
             coins: newCoins,
             totalMissionsCompleted: newTotalMissions,
-            level: newLevel,
+            level: levelProgress.level,
+            // 更新军衔：根据等级自动计算
+            // Update rank: automatically calculated based on level
+            rank: newRank,
             currentStreak: mission.isDaily
               ? Math.max(userStats.currentStreak + 1, streak)
               : userStats.currentStreak,
@@ -394,7 +408,7 @@ export class MissionService {
         return {
           xpEarned: mission.xpReward,
           coinEarned: mission.coinReward,
-          newLevel,
+          newLevel: levelProgress.level,
           levelUp,
           newCoins,
         };
@@ -766,7 +780,7 @@ export class MissionService {
       currentXp: dbUserStats.currentXp,
       maxXp: dbUserStats.maxXp,
       coins: dbUserStats.coins,
-      rank: "", // rank 字段不在 Prisma schema 中，使用空字符串作为默认值
+      rank: dbUserStats.rank as any, // rank 字段现在在数据库中
       totalMissionsCompleted: dbUserStats.totalMissionsCompleted,
       totalXpEarned: dbUserStats.totalXpEarned,
       preferredLang: dbUserStats.preferredLang,
@@ -774,13 +788,5 @@ export class MissionService {
       longestStreak: dbUserStats.longestStreak,
       lastActive: dbUserStats.lastActive || undefined,
     };
-  }
-
-  /**
-   * 辅助方法：根据总 XP 计算等级
-   */
-  private calculateLevel(totalXp: number): number {
-    // 简单的等级计算公式：每100点XP升一级
-    return Math.floor(totalXp / 100) + 1;
   }
 }

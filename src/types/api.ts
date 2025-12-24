@@ -28,7 +28,19 @@ export interface UserStats {
   coins: number;
   totalMissionsCompleted: number;
   totalXpEarned: number;
-  rank: "Cadet" | "Lieutenant" | "Captain" | "Commander";
+  rank:
+    | "Cadet"
+    | "Ensign"
+    | "Lieutenant"
+    | "Commander"
+    | "Captain"
+    | "Admiral"
+    | "Galactic Hero"
+    | "Galactic Legend";
+  preferredLang?: "en" | "zh";
+  currentStreak?: number;
+  longestStreak?: number;
+  lastActive?: Date;
 }
 
 export interface LogEntry {
