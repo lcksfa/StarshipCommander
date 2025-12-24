@@ -29,26 +29,28 @@ interface AddMissionModalProps {
   }) => void;
 }
 
+// 难度配置：与后端 mission-rules.ts 保持一致
+// Difficulty configuration: matches backend mission-rules.ts
 const DIFFICULTIES = [
   {
     id: "easy",
     label: "Cadet",
-    coinReward: 10,
-    xpReward: 25,
+    coinReward: 1,   // EASY: 1 coin
+    xpReward: 5,     // EASY: 5 XP
     color: "bg-green-500",
   },
   {
     id: "medium",
     label: "Lieutenant",
-    coinReward: 30,
-    xpReward: 75,
+    coinReward: 2,   // MEDIUM: 2 coins
+    xpReward: 10,    // MEDIUM: 10 XP
     color: "bg-blue-500",
   },
   {
     id: "hard",
     label: "Captain",
-    coinReward: 50,
-    xpReward: 150,
+    coinReward: 5,   // HARD: 5 coins
+    xpReward: 20,    // HARD: 20 XP
     color: "bg-orange-500",
   },
 ] as const;

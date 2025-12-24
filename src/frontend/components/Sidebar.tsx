@@ -16,7 +16,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   stats,
 }) => {
   const { language, setLanguage, t } = useLanguage();
-  const { user } = useAuth(); // 获取当前用户信息 / Get current user info
+  const { user, logout } = useAuth(); // 获取当前用户信息和登出方法 / Get current user info and logout method
 
   const navItems = [
     { id: Tab.MISSIONS, icon: Rocket, label: t.nav_missions },
@@ -91,7 +91,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer Area: Sleep Mode & Language Toggle */}
       <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
-        <button className="flex items-center gap-3 text-slate-500 hover:text-rose-400 transition-colors px-2 py-2 group">
+        <button
+          onClick={logout}
+          className="flex items-center gap-3 text-slate-500 hover:text-rose-400 transition-colors px-2 py-2 group"
+          title="登出 / Logout"
+        >
           <Moon size={20} className="group-hover:animate-pulse" />
           <span className="font-bold text-sm">{t.nav_abort}</span>
         </button>
