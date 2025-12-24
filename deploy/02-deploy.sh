@@ -28,31 +28,63 @@ fi
 echo "📦 安装项目依赖..."
 pnpm install
 
-# 4. 生成 Prisma Client
+# 4. 创建 Prisma 目录
+echo "📁 创建 Prisma 目录..."
+mkdir -p prisma
+
+# 5. 如果有生产环境配置，复制为 .env
+if [ -f ".env.production" ]; then
+    echo "⚙️  配置生产环境变量..."
+    # 备份现有 .env
+    if [ -f ".env" ]; then
+        cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
+    fi
+    # 复制生产环境配置
+    cp .env.production .env
+    echo "⚠️  请检查并修改 .env 中的敏感配置（如 JWT_SECRET）"
+fi
+
+# 6. 生成 Prisma Client
 echo "🔧 生成 Prisma Client..."
 pnpm prisma:generate
 
-# 5. 推送数据库 schema（开发环境用 prisma:push，生产环境建议用 migrate）
-echo "💾 初始化数据库..."
-pnpm prisma:push
+# 7. 初始化数据库（如果数据库不存在）
+if [ ! -f "prisma/dev.db" ]; then
+    echo "💾 初始化数据库..."
+    pnpm prisma:push
 
-# 6. 运行种子数据（可选）
-echo "🌱 运行种子数据..."
-pnpm prisma:seed
+    # 8. 运行种子数据（仅首次部署）
+    echo "🌱 运行种子数据..."
+    pnpm prisma:seed
+else
+    echo "✅ 数据库已存在，跳过初始化"
+fi
 
-# 7. 构建前端
+# 9. 构建前端
 echo "🔨 构建前端应用..."
 pnpm build
 
-# 8. 构建后端
+# 10. 构建后端
 echo "🔨 构建后端应用..."
 pnpm build:backend
 
 echo "✅ 构建完成！"
 echo "📌 前端构建输出: dist/"
-echo "📌 后端构建输出: dist/backend/"
+echo "📌 后端构建输出: src/backend/dist/backend/"
+echo ""
 
-# 9. 提示启动服务
+# 11. 检查构建输出
+if [ ! -f "dist/index.html" ]; then
+    echo "❌ 前端构建失败：dist/index.html 不存在"
+    exit 1
+fi
+
+if [ ! -f "src/backend/dist/backend/main.js" ]; then
+    echo "❌ 后端构建失败：src/backend/dist/backend/main.js 不存在"
+    exit 1
+fi
+
+echo "✅ 构建验证通过！"
 echo ""
 echo "🎯 下一步：运行启动脚本"
 echo "   bash 03-start-services.sh"
