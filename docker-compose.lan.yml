@@ -16,6 +16,12 @@ services:
   # 后端服务 / Backend Service
   # ==========================================
   backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: runner
+    container_name: starship-backend
+    restart: unless-stopped
     ports:
       - "3001:3001"  # 绑定到所有网络接口 / Bind to all interfaces
     environment:
@@ -29,24 +35,41 @@ services:
       - LOG_LEVEL=info
       # 允许局域网访问 / Allow LAN access
       - CORS_ORIGINS=http://${LAN_IP:-YOUR_LAN_IP}:3000,http://localhost:3000,http://127.0.0.1:3000
+    networks:
+      - starship-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/trpc/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
     volumes:
       - starship-db:/app/prisma
       - starship-logs:/app/logs
-    networks:
-      - starship-network
 
   # ==========================================
   # 前端服务 / Frontend Service
   # ==========================================
   frontend:
     build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: runner
       args:
         # 前端使用局域网 IP 连接后端 / Frontend connects to backend via LAN IP
         - VITE_API_URL=http://${LAN_IP:-YOUR_LAN_IP}:3001/trpc
+    container_name: starship-frontend
+    restart: unless-stopped
     ports:
       - "3000:3000"  # 绑定到所有网络接口 / Bind to all interfaces
     networks:
       - starship-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
     depends_on:
       backend:
         condition: service_healthy
