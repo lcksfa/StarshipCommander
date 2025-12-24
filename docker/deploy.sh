@@ -90,8 +90,21 @@ init_services() {
     echo -e "${BLUE}📦 构建 Docker 镜像...${NC}"
     docker-compose build
 
-    echo -e "${BLUE}🔧 初始化数据库...${NC}"
-    docker-compose --profile init up db-init --abort-on-container-exit
+    # 检查数据库是否已存在
+    if docker volume ls | grep -q starship-db; then
+        echo -e "${YELLOW}⚠️  检测到数据库卷已存在${NC}"
+        read -p "是否重新初始化数据库？ / Reinitialize database? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${BLUE}🔧 初始化数据库...${NC}"
+            docker-compose --profile init up db-init --abort-on-container-exit --force-recreate
+        else
+            echo -e "${GREEN}✅ 跳过数据库初始化${NC}"
+        fi
+    else
+        echo -e "${BLUE}🔧 初始化数据库...${NC}"
+        docker-compose --profile init up db-init --abort-on-container-exit
+    fi
 
     echo -e "${BLUE}🚀 启动服务...${NC}"
     docker-compose up -d
