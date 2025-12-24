@@ -70,7 +70,7 @@ async function main() {
   console.log(`📋 Creating missions...`);
 
   // 定义固定的任务 / Define fixed missions
-  // 使用新的奖励配置 / Using new reward configuration
+  // 使用新的简化奖励配置 / Using new simplified reward configuration
   const fixedMissions = [
     {
       category: "STUDY" as const,
@@ -78,8 +78,8 @@ async function main() {
       description: "每天阅读 30 分钟，培养阅读习惯",
       emoji: "📚",
       difficulty: "EASY" as const,
-      xpReward: 12, // 新配置：12 XP / New config: 12 XP
-      coinReward: 6, // 新配置：6 coins / New config: 6 coins
+      xpReward: 5, // EASY: 5 XP
+      coinReward: 1, // EASY: 1 coin
       isDaily: true,
     },
     {
@@ -88,8 +88,8 @@ async function main() {
       description: "每天早上运动 20 分钟，保持健康",
       emoji: "💪",
       difficulty: "EASY" as const,
-      xpReward: 12, // 新配置：12 XP / New config: 12 XP
-      coinReward: 6, // 新配置：6 coins / New config: 6 coins
+      xpReward: 5, // EASY: 5 XP
+      coinReward: 1, // EASY: 1 coin
       isDaily: true,
     },
     {
@@ -98,8 +98,8 @@ async function main() {
       description: "整理个人房间，保持环境整洁",
       emoji: "🧹",
       difficulty: "MEDIUM" as const,
-      xpReward: 30, // 新配置：30 XP / New config: 30 XP
-      coinReward: 15, // 新配置：15 coins / New config: 15 coins
+      xpReward: 10, // MEDIUM: 10 XP
+      coinReward: 2, // MEDIUM: 2 coins
       isDaily: false,
     },
     {
@@ -108,8 +108,18 @@ async function main() {
       description: "练习绘画技巧，发挥创造力",
       emoji: "🎨",
       difficulty: "MEDIUM" as const,
-      xpReward: 30, // 新配置：30 XP / New config: 30 XP
-      coinReward: 15, // 新配置：15 coins / New config: 15 coins
+      xpReward: 10, // MEDIUM: 10 XP
+      coinReward: 2, // MEDIUM: 2 coins
+      isDaily: false,
+    },
+    {
+      category: "STUDY" as const,
+      title: "完成作业",
+      description: "认真完成学校作业",
+      emoji: "✏️",
+      difficulty: "HARD" as const,
+      xpReward: 20, // HARD: 20 XP
+      coinReward: 5, // HARD: 5 coins
       isDaily: false,
     },
   ];
@@ -143,10 +153,15 @@ async function main() {
   console.log("📊 Seeding Statistics:");
   console.log(`  👥 Users Created: ${users.length}`);
   console.log(`  📋 Missions Created: ${allMissions.length}`);
-  console.log(`    - STUDY: 1 (阅读书籍)`);
+  console.log(`    - STUDY: 2 (阅读书籍, 完成作业)`);
   console.log(`    - HEALTH: 1 (晨间运动)`);
   console.log(`    - CHORE: 1 (整理房间)`);
   console.log(`    - CREATIVE: 1 (绘画练习)`);
+  console.log("\n📈 Reward Configuration:");
+  console.log(`    - EASY: 5 XP, 1 coin (简单任务)`);
+  console.log(`    - MEDIUM: 10 XP, 2 coins (中等任务)`);
+  console.log(`    - HARD: 20 XP, 5 coins (困难任务)`);
+  console.log(`    - 5-day streak: +20 XP, +2 coins (连胜奖励)`);
   console.log("\n🎉 Database seeding completed successfully!\n");
 }
 

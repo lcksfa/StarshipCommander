@@ -15,62 +15,100 @@
  * HARD:   Challenging tasks that take 1+ hours
  *
  * Progression Design / 进度设计：
- * - Early game (Level 1-10): 3-5 EASY tasks or 1-2 MEDIUM tasks to level up / 前期：3-5个EASY或1-2个MEDIUM任务升级
- * - Mid game (Level 11-25): 6-10 EASY tasks or 3-5 MEDIUM tasks to level up / 中期：6-10个EASY或3-5个MEDIUM任务升级
- * - Late game (Level 26+): 15+ EASY tasks or 7+ MEDIUM tasks to level up / 后期：15+个EASY或7+个MEDIUM任务升级
+ * - Early game (Level 1-10): 10 EASY tasks to level up / 前期：10个EASY任务升级
+ * - Mid game (Level 11-25): 25 EASY tasks to level up / 中期：25个EASY任务升级
+ * - Late game (Level 26+): 50 EASY tasks to level up / 后期：50个EASY任务升级
  */
 export const MISSION_DIFFICULTY_CONFIG = {
   /**
    * EASY difficulty rewards / 简单难度奖励
-   * - Min: 8-15 XP, 4-8 coins
-   * - Max: 15-30 XP, 8-15 coins
-   * - Recommended: 12 XP, 6 coins
+   * - Fixed: 5 XP, 1 coin
    *
    * Leveling speed / 升级速度：
-   * - Level 1→2 (needs 50 XP): ~4 tasks / 约4个任务
-   * - Level 5→6 (needs 120 XP): ~10 tasks / 约10个任务
-   * - Level 10→11 (needs 250 XP): ~21 tasks / 约21个任务
+   * - Level 1→2 (needs 50 XP): 10 tasks / 10个任务
+   * - Level 5→6 (needs 120 XP): 24 tasks / 24个任务
+   * - Level 10→11 (needs 250 XP): 50 tasks / 50个任务
    */
   EASY: {
-    min: { xp: 8, coins: 4 },
-    max: { xp: 30, coins: 15 },
-    recommended: { xp: 12, coins: 6 },
+    min: { xp: 5, coins: 1 },
+    max: { xp: 5, coins: 1 },
+    recommended: { xp: 5, coins: 1 },
   },
 
   /**
    * MEDIUM difficulty rewards / 中等难度奖励
-   * - Min: 20-40 XP, 10-20 coins
-   * - Max: 40-80 XP, 20-40 coins
-   * - Recommended: 30 XP, 15 coins
+   * - Fixed: 10 XP, 2 coins
    *
    * Leveling speed / 升级速度：
-   * - Level 1→2 (needs 50 XP): ~2 tasks / 约2个任务
-   * - Level 5→6 (needs 120 XP): ~4 tasks / 约4个任务
-   * - Level 10→11 (needs 250 XP): ~8 tasks / 约8个任务
+   * - Level 1→2 (needs 50 XP): 5 tasks / 5个任务
+   * - Level 5→6 (needs 120 XP): 12 tasks / 12个任务
+   * - Level 10→11 (needs 250 XP): 25 tasks / 25个任务
    */
   MEDIUM: {
-    min: { xp: 20, coins: 10 },
-    max: { xp: 80, coins: 40 },
-    recommended: { xp: 30, coins: 15 },
+    min: { xp: 10, coins: 2 },
+    max: { xp: 10, coins: 2 },
+    recommended: { xp: 10, coins: 2 },
   },
 
   /**
    * HARD difficulty rewards / 困难难度奖励
-   * - Min: 50-80 XP, 25-40 coins
-   * - Max: 80-150 XP, 40-75 coins
-   * - Recommended: 60 XP, 30 coins
+   * - Fixed: 20 XP, 5 coins
    *
    * Leveling speed / 升级速度：
-   * - Level 1→2 (needs 50 XP): ~1 task / 约1个任务
-   * - Level 5→6 (needs 120 XP): ~2 tasks / 约2个任务
-   * - Level 10→11 (needs 250 XP): ~4 tasks / 约4个任务
+   * - Level 1→2 (needs 50 XP): 2.5 tasks / 2.5个任务
+   * - Level 5→6 (needs 120 XP): 6 tasks / 6个任务
+   * - Level 10→11 (needs 250 XP): 12.5 tasks / 12.5个任务
    */
   HARD: {
-    min: { xp: 50, coins: 25 },
-    max: { xp: 150, coins: 75 },
-    recommended: { xp: 60, coins: 30 },
+    min: { xp: 20, coins: 5 },
+    max: { xp: 20, coins: 5 },
+    recommended: { xp: 20, coins: 5 },
   },
 } as const;
+
+/**
+ * Streak bonus configuration / 连胜奖励配置
+ */
+export const STREAK_BONUS_CONFIG = {
+  /**
+   * Daily streak bonus thresholds / 每日连胜奖励阈值
+   */
+  thresholds: [
+    { days: 5, bonus: { xp: 20, coins: 2 } }, // 5天连胜：20经验，2星币
+  ],
+
+  /**
+   * Check if streak qualifies for bonus / 检查连胜是否符合奖励条件
+   *
+   * @param currentStreak - Current streak days / 当前连胜天数
+   * @returns Bonus if qualified, null otherwise / 符合奖励条件返回奖励，否则返回null
+   */
+  getStreakBonus(currentStreak: number): { xp: number; coins: number } | null {
+    // Find the highest threshold that the streak qualifies for
+    // 找到连胜符合的最高阈值
+    for (const threshold of this.thresholds) {
+      if (currentStreak >= threshold.days) {
+        return threshold.bonus;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Get next streak milestone / 获取下一个连胜里程碑
+   *
+   * @param currentStreak - Current streak days / 当前连胜天数
+   * @returns Next milestone or null if already at max / 下一个里程碑或已达到最大值返回null
+   */
+  getNextMilestone(currentStreak: number): { days: number; bonus: { xp: number; coins: number } } | null {
+    for (const threshold of this.thresholds) {
+      if (currentStreak < threshold.days) {
+        return threshold;
+      }
+    }
+    return null;
+  },
+};
 
 /**
  * Mission difficulty type / 任务难度类型
