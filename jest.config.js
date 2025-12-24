@@ -48,7 +48,7 @@ export default {
   },
 
   // Setup files / 设置文件
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  setupFilesAfterEnv: ["<rootDir>/config/jest.setup.js"],
 
   // Module directories / 模块目录
   moduleDirectories: ["node_modules", "<rootDir>/src"],
