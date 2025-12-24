@@ -183,10 +183,20 @@ export class HistoryController {
     @Query("dateTo") dateTo?: string,
   ) {
     try {
-      const stats = await this.missionService.getMissionStats(userId, {
-        from: dateFrom ? new Date(dateFrom) : undefined,
-        to: dateTo ? new Date(dateTo) : undefined,
-      });
+      // Only pass period if both dates are provided
+      // 只有当两个日期都提供时才传递 period
+      const period =
+        dateFrom && dateTo
+          ? {
+              from: new Date(dateFrom),
+              to: new Date(dateTo),
+            }
+          : undefined;
+
+      const stats = await this.missionService.getMissionStats(
+        userId,
+        period,
+      );
       return {
         success: true,
         data: stats,

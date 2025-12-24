@@ -22,7 +22,11 @@ interface User {
 export async function createContext({
   req,
   res,
-}: CreateExpressContextOptions) {
+}: CreateExpressContextOptions): Promise<{
+  req: typeof req;
+  res: typeof res;
+  user: User | null;
+}> {
   // Get user from request headers or cookie
   // 从请求头或cookie中获取用户信息
   const user = await getUserFromRequest(req);
@@ -41,7 +45,11 @@ export async function createContext({
 export async function createPublicContext({
   req,
   res,
-}: CreateExpressContextOptions) {
+}: CreateExpressContextOptions): Promise<{
+  req: typeof req;
+  res: typeof res;
+  user: null;
+}> {
   return {
     req,
     res,
