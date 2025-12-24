@@ -17,7 +17,7 @@ const API_BASE = "http://localhost:3001";
 
 test.describe("Mission Creation Flow / 任务创建流程测试", () => {
   // 使用前端默认用户 ID，确保测试用户存在
-  const TEST_USER_ID = "user_10_1766463362298_8tjuvr";
+  const TEST_USER_ID = "user_1_1766541951100_0x4zrc";
 
   // 在所有测试前创建测试用户数据（Test 1 需要用户数据存在）
   test.beforeAll(async ({ request }) => {

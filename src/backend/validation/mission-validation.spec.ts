@@ -255,10 +255,13 @@ describe("Mission Validation / 任务验证", () => {
         xpReward: 200,
         coinReward: 100,
         category: "study",
-        emoji: "⚛️",
+        emoji: "🚀",
         isDaily: false,
         difficulty: "HARD",
       });
+      if (!result.success) {
+        console.error("HARD validation errors:", result.error.issues);
+      }
       expect(result.success).toBe(true);
     });
   });

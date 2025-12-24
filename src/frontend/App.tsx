@@ -34,7 +34,7 @@ const App: React.FC = () => {
 
   // 用户版本控制：当数据重置时自动更新
   // User version control: auto-update when data is reset
-  const USER_STORAGE_VERSION = "v1"; // 版本号，数据重置时修改此值
+  const USER_STORAGE_VERSION = "v2"; // 版本号，数据重置时修改此值
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [userId, _setUserId] = useState(() => {
@@ -44,7 +44,7 @@ const App: React.FC = () => {
     // 如果版本不匹配或没有用户 ID，重置为默认用户
     // If version mismatch or no userId, reset to default user
     if (version !== USER_STORAGE_VERSION || !stored) {
-      const defaultUserId = "user_10_1766463362298_8tjuvr";
+      const defaultUserId = "user_1_1766541951100_0x4zrc";
       localStorage.setItem("starship-user-id", defaultUserId);
       localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
       console.log("🔄 用户 ID 已重置 / User ID reset:", defaultUserId);
@@ -57,7 +57,7 @@ const App: React.FC = () => {
   // 如果获取用户统计失败（用户不存在），重置用户 ID
   // If fetching user stats fails (user not exist), reset userId
   // const handleUserNotFound = () => {
-  //   const defaultUserId = "user_10_1766463362298_8tjuvr";
+  //   const defaultUserId = "user_1_1766541951100_0x4zrc";
   //   localStorage.setItem("starship-user-id", defaultUserId);
   //   localStorage.setItem("starship-user-version", USER_STORAGE_VERSION);
   //   setUserId(defaultUserId);

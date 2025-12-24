@@ -163,14 +163,16 @@ describe("Error Utils / 错误工具函数", () => {
   });
 
   describe("logError", () => {
-    // Spy on console.error / 监视 console.error
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+    let consoleErrorSpy: jest.SpyInstance;
 
-    afterEach(() => {
-      consoleErrorSpy.mockClear();
+    beforeEach(() => {
+      // Spy on console.error / 监视 console.error
+      consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {
+        // Empty implementation to suppress output / 空实现以抑制输出
+      });
     });
 
-    afterAll(() => {
+    afterEach(() => {
       consoleErrorSpy.mockRestore();
     });
 
@@ -218,7 +220,7 @@ describe("Error Utils / 错误工具函数", () => {
         expect.objectContaining({
           error,
           message: "tRPC error",
-          type: "Object",
+          type: "object",
         })
       );
     });

@@ -111,33 +111,6 @@
     "typescript": "~5.9.3",
     "vite": "^7.3.0"
   },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts",
-      "tsx"
-    ],
-    "rootDir": ".",
-    "testMatch": [
-      "**/__tests__/**/*.ts?(x)",
-      "**/?(*.)+(spec|test).ts?(x)"
-    ],
-    "transform": {
-      "^.+\\.(t|j)sx?$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "src/**/*.{ts,tsx}",
-      "!src/**/*.d.ts",
-      "!src/**/*.spec.{ts,tsx}",
-      "!src/**/*.test.{ts,tsx}"
-    ],
-    "coverageDirectory": "coverage",
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "<rootDir>/jest.setup.js"
-    ]
-  },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
