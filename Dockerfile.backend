@@ -1,0 +1,88 @@
+# ==========================================
+# Stage 1: 依赖安装 / Dependencies Installation
+# ==========================================
+FROM node:18-alpine AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# 安装 pnpm
+RUN npm install -g pnpm@10.26.1
+
+# 复制 package 文件
+COPY package.json pnpm-lock.yaml* ./
+COPY prisma ./prisma/
+
+# 安装依赖
+RUN pnpm install --frozen-lockfile
+
+# ==========================================
+# Stage 2: 构建后端 / Build Backend
+# ==========================================
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# 安装 pnpm
+RUN npm install -g pnpm@10.26.1
+
+# 从 deps 阶段复制 node_modules
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# 设置构建环境变量
+ENV NODE_ENV production
+ENV BACKEND_BUILD_ONLY true
+
+# 生成 Prisma Client
+RUN pnpm prisma:generate
+
+# 构建后端
+RUN pnpm build:backend
+
+# ==========================================
+# Stage 3: 生产镜像 / Production Image
+# ==========================================
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# 安装 dumb-init（正确的信号处理）
+RUN apk add --no-cache dumb-init
+
+# 创建非 root 用户
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001
+
+# 设置生产环境
+ENV NODE_ENV production
+ENV PORT 3001
+
+# 复制必要文件
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-lock.yaml* ./pnpm-lock.yaml*
+COPY --from=builder /app/src/backend/dist ./src/backend/dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/@nestjs ./node_modules/@nestjs
+COPY --from=builder /app/node_modules/@trpc ./node_modules/@trpc
+
+# 安装生产依赖
+RUN npm install -g pnpm@10.26.1 && \
+    pnpm install --prod --frozen-lockfile
+
+# 创建日志目录
+RUN mkdir -p logs && \
+    chown -R nestjs:nodejs logs
+
+# 切换到非 root 用户
+USER nestjs
+
+# 暴露端口
+EXPOSE 3001
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3001/trpc/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# 使用 dumb-init 启动
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "src/backend/dist/backend/main.js"]
