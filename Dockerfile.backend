@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: 依赖安装 / Dependencies Installation
 # ==========================================
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN pnpm install --frozen-lockfile
 # ==========================================
 # Stage 2: 构建后端 / Build Backend
 # ==========================================
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # 安装 pnpm
@@ -41,7 +41,7 @@ RUN pnpm build:backend
 # ==========================================
 # Stage 3: 生产镜像 / Production Image
 # ==========================================
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 # 安装 dumb-init（正确的信号处理）
