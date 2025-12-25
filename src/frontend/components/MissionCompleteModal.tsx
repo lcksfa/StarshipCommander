@@ -42,7 +42,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
               {mission.title}
             </h2>
             <p className="text-slate-400 text-sm">
-              完成任务获得奖励
+              {t.rewards_earned}
             </p>
           </div>
 
@@ -55,7 +55,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
                 +{mission.xpReward}
               </div>
               <div className="text-neon-purple text-xs font-bold">
-                能力水平
+                {t.level_up}
               </div>
             </div>
 
@@ -66,7 +66,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
                 +{mission.coinReward}
               </div>
               <div className="text-neon-gold text-xs font-bold">
-                星币
+                {t.coins}
               </div>
             </div>
           </div>
@@ -75,7 +75,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
           {mission.isDaily && mission.streak > 0 && (
             <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-3 mb-6 text-center">
               <div className="text-neon-orange text-sm font-bold">
-                🔥 {mission.streak} 天连胜
+                🔥 {mission.streak} {t.streak_days}
               </div>
             </div>
           )}
@@ -93,10 +93,10 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="animate-spin">⏳</span>
-                领取中...
+                {t.claiming_rewards}
               </span>
             ) : (
-              "领取奖励"
+              t.claim_rewards
             )}
           </button>
         </div>
