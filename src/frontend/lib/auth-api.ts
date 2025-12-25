@@ -321,7 +321,9 @@ class AuthApiClient {
    * const user = await authApi.getCurrentUser();
    */
   async getCurrentUser(): Promise<User> {
-    const response = await this.call<ApiResponse<{ user: User }>>("/auth.me");
+    // me 是 query 操作，需要使用 GET 方法 / me is a query operation, requires GET method
+    // 传入空对象以确保正确编码 query 参数 / Pass empty object to properly encode query params
+    const response = await this.call<ApiResponse<{ user: User }>>("/auth.me", {}, "GET");
 
     if (!response.success || !response.data) {
       throw new Error(response.error?.message || "Failed to get user");
