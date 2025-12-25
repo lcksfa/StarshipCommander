@@ -1,72 +1,301 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <!-- 背景渐变 -->
-    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- 深空背景渐变 / Deep Space Background Gradient -->
+    <radialGradient id="space-bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+
+    <!-- 行星渐变 / Planet Gradient -->
+    <linearGradient id="planet-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#22d3ee"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
 
-    <!-- 火箭渐变 -->
-    <linearGradient id="rocket-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#e0f2fe"/>
+    <!-- 轨道环渐变 / Orbital Ring Gradient -->
+    <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="50%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#facc15"/>
     </linearGradient>
 
-    <!-- 发光效果 -->
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+    <!-- 能量场渐变 / Energy Field Gradient -->
+    <radialGradient id="energy-field" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(34, 211, 238, 0.3)"/>
+      <stop offset="100%" stop-color="rgba(34, 211, 238, 0)"/>
+    </radialGradient>
+
+    <!-- 指挥站金属渐变 / Command Station Metal Gradient -->
+    <linearGradient id="station-metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="50%" stop-color="#bae6fd"/>
+      <stop offset="100%" stop-color="#7dd3fc"/>
+    </linearGradient>
+
+    <!-- 发光效果 / Glow Effect -->
+    <filter id="glow-strong" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
       <feMerge>
-        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
+
+    <filter id="glow-soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- 星星闪烁动画 / Star Twinkle Animation -->
+    <symbol id="star">
+      <circle r="2" fill="#ffffff">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </symbol>
+
+    <!-- 小星星 / Small Star -->
+    <symbol id="star-small">
+      <circle r="1.5" fill="#ffffff">
+        <animate attributeName="opacity" values="0.2;0.8;0.2" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+    </symbol>
+
+    <!-- 菱形星 / Diamond Star -->
+    <symbol id="star-diamond">
+      <path d="M 0 -4 L 1 0 L 0 4 L -1 0 Z" fill="#ffffff">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="8s" repeatCount="indefinite"/>
+      </path>
+    </symbol>
   </defs>
 
-  <!-- 背景圆角矩形 -->
-  <rect x="0" y="0" width="512" height="512" rx="115" ry="115" fill="url(#bg-gradient)"/>
+  <!-- 背景圆角矩形 / Background Rounded Rectangle -->
+  <rect x="0" y="0" width="512" height="512" rx="115" ry="115" fill="url(#space-bg)"/>
 
-  <!-- 装饰圆环 -->
-  <circle cx="256" cy="256" r="180" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="8"/>
-  <circle cx="256" cy="256" r="200" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-
-  <!-- 火箭图标（与 logo 一致，旋转 -45 度） -->
-  <g transform="translate(256, 256) rotate(-45) translate(-120, -120)" filter="url(#glow)">
-    <!-- 火箭主体 -->
-    <path d="M 120 20
-             L 160 100
-             L 220 120
-             L 220 200
-             L 160 240
-             L 120 220
-             L 80 240
-             L 20 200
-             L 20 120
-             L 80 100
-             Z"
-          fill="url(#rocket-gradient)"
-          stroke="#ffffff"
-          stroke-width="6"
-          stroke-linejoin="round"/>
-
-    <!-- 驾驶舱窗户 -->
-    <circle cx="120" cy="120" r="24" fill="#22d3ee" stroke="#ffffff" stroke-width="4"/>
-
-    <!-- 引擎火焰 -->
-    <path d="M 100 240 L 120 280 L 140 240 Z" fill="#fbbf24">
-      <animate attributeName="d"
-               values="M 100 240 L 120 280 L 140 240 Z;
-                       M 100 240 L 120 260 L 140 240 Z;
-                       M 100 240 L 120 280 L 140 240 Z"
-               dur="0.5s"
-               repeatCount="indefinite"/>
-    </path>
+  <!-- 远景星星 / Distant Stars -->
+  <g opacity="0.4">
+    <use href="#star-small" x="60" y="80"/>
+    <use href="#star-small" x="120" y="60"/>
+    <use href="#star-small" x="180" y="100"/>
+    <use href="#star-small" x="50" y="150"/>
+    <use href="#star-small" x="90" y="200"/>
+    <use href="#star" x="150" y="180"/>
+    <use href="#star-small" x="220" y="70"/>
+    <use href="#star-small" x="300" y="60"/>
+    <use href="#star-small" x="380" y="90"/>
+    <use href="#star" x="430" y="70"/>
+    <use href="#star-small" x="460" y="130"/>
+    <use href="#star-small" x="480" y="180"/>
+    <use href="#star-small" x="70" y="260"/>
+    <use href="#star-small" x="100" y="320"/>
+    <use href="#star" x="60" y="380"/>
+    <use href="#star-small" x="130" y="420"/>
+    <use href="#star-small" x="400" y="300"/>
+    <use href="#star-small" x="440" y="350"/>
+    <use href="#star" x="460" y="420"/>
+    <use href="#star-small" x="380" y="450"/>
+    <use href="#star-diamond" x="80" y="100"/>
+    <use href="#star-diamond" x="420" y="100"/>
+    <use href="#star-diamond" x="90" y="400"/>
+    <use href="#star-diamond" x="440" y="380"/>
   </g>
 
-  <!-- 星星装饰 -->
-  <g fill="#ffffff" opacity="0.6">
-    <circle cx="100" cy="100" r="8"/>
-    <circle cx="412" cy="100" r="6"/>
-    <circle cx="80" cy="412" r="7"/>
-    <circle cx="420" cy="400" r="5"/>
+  <!-- 中景星星 / Mid-range Stars -->
+  <g opacity="0.7">
+    <use href="#star" x="100" y="120">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+    </use>
+    <use href="#star" x="400" y="140">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2.3s" repeatCount="indefinite"/>
+    </use>
+    <use href="#star-diamond" x="140" y="350"/>
+    <use href="#star-diamond" x="380" y="380">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="2.8s" repeatCount="indefinite"/>
+    </use>
+  </g>
+
+  <!-- 外轨道环（虚线） / Outer Orbital Ring (Dashed) -->
+  <ellipse cx="256" cy="270" rx="190" ry="60"
+           fill="none"
+           stroke="url(#ring-gradient)"
+           stroke-width="6"
+           stroke-dasharray="20 10"
+           opacity="0.6"
+           transform="rotate(-15 256 270)">
+    <animateTransform attributeName="transform"
+                      type="rotate"
+                      from="-15 256 270"
+                      to="345 256 270"
+                      dur="30s"
+                      repeatCount="indefinite"/>
+  </ellipse>
+
+  <!-- 内轨道环 / Inner Orbital Ring -->
+  <ellipse cx="256" cy="270" rx="140" ry="45"
+           fill="none"
+           stroke="url(#ring-gradient)"
+           stroke-width="4"
+           opacity="0.4"
+           transform="rotate(15 256 270)">
+    <animateTransform attributeName="transform"
+                      type="rotate"
+                      from="15 256 270"
+                      to="-345 256 270"
+                      dur="25s"
+                      repeatCount="indefinite"/>
+  </ellipse>
+
+  <!-- 能量场 / Energy Field -->
+  <circle cx="256" cy="256" r="100" fill="url(#energy-field)">
+    <animate attributeName="r" values="100;110;100" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- 中心行星 / Central Planet -->
+  <circle cx="256" cy="256" r="75" fill="url(#planet-gradient)" filter="url(#glow-strong)"/>
+
+  <!-- 行星纹理 / Planet Texture -->
+  <ellipse cx="240" cy="245" rx="50" ry="15"
+           fill="none"
+           stroke="rgba(255,255,255,0.2)"
+           stroke-width="3"
+           transform="rotate(-20 240 245)"/>
+  <ellipse cx="260" cy="270" rx="40" ry="10"
+           fill="none"
+           stroke="rgba(255,255,255,0.15)"
+           stroke-width="2"
+           transform="rotate(10 260 270)"/>
+
+  <!-- 行星高光 / Planet Highlight -->
+  <ellipse cx="235" cy="235" rx="25" ry="20"
+           fill="rgba(255,255,255,0.3)"/>
+
+  <!-- 星际指挥站 / Starship Command Station -->
+  <g transform="translate(256, 256)" filter="url(#glow-soft)">
+    <!-- 主塔楼 / Main Tower -->
+    <path d="M -25 15
+             L -20 -50
+             L 0 -65
+             L 20 -50
+             L 25 15
+             Z"
+          fill="url(#station-metal)"
+          stroke="#ffffff"
+          stroke-width="3"
+          stroke-linejoin="round"/>
+
+    <!-- 左侧机翼 / Left Wing -->
+    <path d="M -25 5
+             L -60 -20
+             L -55 10
+             L -25 20
+             Z"
+          fill="url(#station-metal)"
+          stroke="#ffffff"
+          stroke-width="2.5"
+          stroke-linejoin="round"/>
+
+    <!-- 右侧机翼 / Right Wing -->
+    <path d="M 25 5
+             L 60 -20
+             L 55 10
+             L 25 20
+             Z"
+          fill="url(#station-metal)"
+          stroke="#ffffff"
+          stroke-width="2.5"
+          stroke-linejoin="round"/>
+
+    <!-- 底部推进器 / Bottom Thruster -->
+    <ellipse cx="0" cy="20" rx="20" ry="8"
+             fill="#7dd3fc"
+             stroke="#ffffff"
+             stroke-width="2"/>
+
+    <!-- 推进器火焰效果 / Thruster Flame Effect -->
+    <ellipse cx="0" cy="35" rx="12" ry="8"
+             fill="#facc15"
+             opacity="0.8">
+      <animate attributeName="ry" values="8;12;8" dur="0.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="0.4s" repeatCount="indefinite"/>
+    </ellipse>
+
+    <!-- 主控制室窗户 / Main Control Window -->
+    <circle cx="0" cy="-25" r="15"
+            fill="#22d3ee"
+            stroke="#ffffff"
+            stroke-width="3"/>
+
+    <!-- 窗户内部细节 / Window Inner Detail -->
+    <circle cx="0" cy="-25" r="10"
+            fill="rgba(255,255,255,0.4)"/>
+
+    <!-- 侧边窗户 / Side Windows -->
+    <circle cx="-15" cy="0" r="5"
+            fill="#22d3ee"
+            stroke="#ffffff"
+            stroke-width="2"/>
+    <circle cx="15" cy="0" r="5"
+            fill="#22d3ee"
+            stroke="#ffffff"
+            stroke-width="2"/>
+
+    <!-- 顶部天线 / Top Antenna -->
+    <line x1="0" y1="-65" x2="0" y2="-85"
+          stroke="#ffffff"
+          stroke-width="3"
+          stroke-linecap="round"/>
+    <circle cx="0" cy="-88" r="4"
+            fill="#facc15">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 装饰性小卫星 / Decorative Small Satellites -->
+  <g filter="url(#glow-soft)">
+    <!-- 卫星1 / Satellite 1 -->
+    <g transform="translate(380, 180)">
+      <circle r="8" fill="#e0f2fe" stroke="#ffffff" stroke-width="2"/>
+      <line x1="-12" y1="0" x2="-6" y2="0" stroke="#ffffff" stroke-width="2"/>
+      <line x1="6" y1="0" x2="12" y2="0" stroke="#ffffff" stroke-width="2"/>
+      <animateTransform attributeName="transform"
+                        type="rotate"
+                        from="0 380 180"
+                        to="360 380 180"
+                        dur="10s"
+                        repeatCount="indefinite"/>
+    </g>
+
+    <!-- 卫星2 / Satellite 2 -->
+    <g transform="translate(130, 340)">
+      <circle r="6" fill="#bae6fd" stroke="#ffffff" stroke-width="1.5"/>
+      <line x1="-10" y1="0" x2="-5" y2="0" stroke="#ffffff" stroke-width="1.5"/>
+      <line x1="5" y1="0" x2="10" y2="0" stroke="#ffffff" stroke-width="1.5"/>
+      <animateTransform attributeName="transform"
+                        type="rotate"
+                        from="360 130 340"
+                        to="0 130 340"
+                        dur="12s"
+                        repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <!-- 前景亮星 / Foreground Bright Stars -->
+  <g filter="url(#glow-soft)">
+    <use href="#star-diamond" x="200" y="150">
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
+    </use>
+    <use href="#star-diamond" x="330" y="200">
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="2.2s" repeatCount="indefinite"/>
+    </use>
+    <use href="#star" x="180" y="380">
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="1.8s" repeatCount="indefinite"/>
+    </use>
   </g>
 </svg>

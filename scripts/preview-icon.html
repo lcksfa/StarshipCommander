@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图标预览 - Icon Preview | 星际指挥官 Starship Commander</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #e0f2fe;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #22d3ee, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 50px;
+            font-size: 1.1rem;
+        }
+
+        .section {
+            background: rgba(30, 27, 75, 0.5);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #22d3ee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '✨';
+        }
+
+        /* SVG 原尺寸预览 */
+        .svg-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 20px;
+        }
+
+        .svg-preview img {
+            max-width: 300px;
+            height: auto;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(34, 211, 238, 0.3);
+        }
+
+        /* 不同尺寸展示 */
+        .sizes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .size-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(34, 211, 238, 0.1);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .size-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(34, 211, 238, 0.4);
+        }
+
+        .size-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .size-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .size-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #22d3ee;
+        }
+
+        /* 浏览器标签预览 */
+        .browser-preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .browser-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px 10px 0 0;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            border-bottom: none;
+        }
+
+        .browser-tab img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .browser-tab span {
+            font-size: 0.9rem;
+            color: #e0f2fe;
+        }
+
+        /* 功能列表 */
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            background: rgba(34, 211, 238, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #22d3ee;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #22d3ee;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 颜色展示 */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .color-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .color-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            margin: 0 auto 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-name {
+            font-size: 0.9rem;
+            color: #e0f2fe;
+            margin-bottom: 5px;
+        }
+
+        .color-value {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(34, 211, 238, 0.2);
+            color: #64748b;
+        }
+
+        .footer a {
+            color: #22d3ee;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 动画提示 */
+        .animation-badge {
+            display: inline-block;
+            background: rgba(250, 204, 21, 0.2);
+            color: #facc15;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 星际指挥官图标预览</h1>
+        <p class="subtitle">Starship Commander Icon Preview - v2.0 深空科幻设计</p>
+
+        <!-- SVG 原尺寸预览 -->
+        <div class="section">
+            <h2 class="section-title">SVG 原尺寸图标 <span class="animation-badge">✨ 支持动画</span></h2>
+            <div class="svg-preview">
+                <img src="/favicon.svg" alt="SVG Favicon">
+            </div>
+            <p style="text-align: center; color: #94a3b8; margin-top: 15px;">
+                观察：星星闪烁、轨道环旋转、能量场脉动、推进器火焰
+            </p>
+        </div>
+
+        <!-- 浏览器标签预览 -->
+        <div class="section">
+            <h2 class="section-title">浏览器标签预览</h2>
+            <div class="browser-preview">
+                <div class="browser-tab">
+                    <img src="/favicon.svg" alt="icon">
+                    <span>星际指挥官</span>
+                </div>
+                <div class="browser-tab">
+                    <img src="/favicon-16x16.png" alt="icon">
+                    <span>16×16 PNG</span>
+                </div>
+                <div class="browser-tab">
+                    <img src="/favicon-32x32.png" alt="icon">
+                    <span>32×32 PNG</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 不同尺寸展示 -->
+        <div class="section">
+            <h2 class="section-title">不同尺寸图标</h2>
+            <div class="sizes-grid">
+                <div class="size-card">
+                    <img src="/favicon-16x16.png" alt="16x16">
+                    <div class="size-label">浏览器标签</div>
+                    <div class="size-value">16×16</div>
+                </div>
+                <div class="size-card">
+                    <img src="/favicon-32x32.png" alt="32x32">
+                    <div class="size-label">现代浏览器</div>
+                    <div class="size-value">32×32</div>
+                </div>
+                <div class="size-card">
+                    <img src="/apple-touch-icon.png" alt="180x180">
+                    <div class="size-label">iOS 设备</div>
+                    <div class="size-value">180×180</div>
+                </div>
+                <div class="size-card">
+                    <img src="/android-chrome-192x192.png" alt="192x192">
+                    <div class="size-label">Android Chrome</div>
+                    <div class="size-value">192×192</div>
+                </div>
+                <div class="size-card">
+                    <img src="/android-chrome-512x512.png" alt="512x512">
+                    <div class="size-label">高分辨率</div>
+                    <div class="size-value">512×512</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设计特色 -->
+        <div class="section">
+            <h2 class="section-title">设计特色</h2>
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-title">🌌 深空背景</div>
+                    <div class="feature-desc">
+                        从深靛蓝到纯黑的径向渐变，营造深邃宇宙氛围
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">🌍 3D 行星</div>
+                    <div class="feature-desc">
+                        带纹理和高光的立体行星，青-蓝-紫渐变配色
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">🛸 星际指挥站</div>
+                    <div class="feature-desc">
+                        金属质感的太空站，包含塔楼、机翼、控制室和推进器
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">💫 动态轨道环</div>
+                    <div class="feature-desc">
+                        两条反向旋转的金色椭圆轨道，营造运动感
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">⭐ 多层次星空</div>
+                    <div class="feature-desc">
+                        远景、中景、前景三层星星，带闪烁和旋转动画
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">🔥 推进器火焰</div>
+                    <div class="feature-desc">
+                        动态脉冲的火焰效果，展现飞船的动力
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">📡 天线信号</div>
+                    <div class="feature-desc">
+                        1秒周期的高频闪烁，模拟通讯信号灯
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">🛰️ 装饰卫星</div>
+                    <div class="feature-desc">
+                        两个缓慢旋转的小型卫星，增加细节层次
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 配色方案 -->
+        <div class="section">
+            <h2 class="section-title">配色方案</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-box" style="background: linear-gradient(135deg, #1e1b4b, #020617);"></div>
+                    <div class="color-name">深空背景</div>
+                    <div class="color-value">#1e1b4b → #020617</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-box" style="background: linear-gradient(135deg, #22d3ee, #8b5cf6);"></div>
+                    <div class="color-name">行星渐变</div>
+                    <div class="color-value">#22d3ee → #8b5cf6</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-box" style="background: linear-gradient(90deg, #facc15, #fb923c);"></div>
+                    <div class="color-name">轨道环</div>
+                    <div class="color-value">#facc15 → #fb923c</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-box" style="background: linear-gradient(180deg, #e0f2fe, #7dd3fc);"></div>
+                    <div class="color-name">指挥站金属</div>
+                    <div class="color-value">#e0f2fe → #7dd3fc</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-box" style="background: #facc15;"></div>
+                    <div class="color-name">火焰金</div>
+                    <div class="color-value">#facc15</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-box" style="background: #22d3ee;"></div>
+                    <div class="color-name">霓虹青</div>
+                    <div class="color-value">#22d3ee</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>
+                详细文档: <a href="/docs/ICON_DESIGN.md" target="_blank">图标设计说明</a>
+            </p>
+            <p style="margin-top: 10px;">
+                Design by Starship Commander Team | Last Updated: 2025-12-25
+            </p>
+        </div>
+    </div>
+</body>
+</html>
