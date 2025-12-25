@@ -27,11 +27,14 @@ RUN npm install -g pnpm@10.26.1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# 设置构建环境变量
-ENV VITE_API_URL=http://localhost:3001/trpc
-ENV NODE_ENV production
+# 接收构建参数 / Accept build arguments
+ARG VITE_API_URL=http://localhost:3001/trpc
 
-# 构建前端
+# 设置构建环境变量 / Set build environment variables
+ENV VITE_API_URL=${VITE_API_URL}
+ENV NODE_ENV=production
+
+# 构建前端 / Build frontend
 RUN pnpm build
 
 # ==========================================

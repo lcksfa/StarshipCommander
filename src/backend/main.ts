@@ -25,12 +25,18 @@ async function bootstrap() {
     }),
   );
 
-  // CORS configuration - 必须在 helmet 之前配置
+  // CORS configuration - 必须在 helmet 之前配置 / CORS configuration - must be before helmet
   const allowedOrigins = [
     process.env.FRONTEND_URL || "http://localhost:3000",
-    "http://localhost:5173", // Vite 开发服务器默认端口
-    "http://localhost:3000", // 备用前端端口
+    "http://localhost:5173", // Vite 开发服务器默认端口 / Vite dev server default port
+    "http://localhost:3000", // 备用前端端口 / Backup frontend port
   ];
+
+  // 解析 CORS_ORIGINS 环境变量（逗号分隔） / Parse CORS_ORIGINS env var (comma-separated)
+  if (process.env.CORS_ORIGINS) {
+    const corsOrigins = process.env.CORS_ORIGINS.split(",").map((o) => o.trim());
+    allowedOrigins.push(...corsOrigins);
+  }
 
   app.enableCors({
     origin: allowedOrigins,
