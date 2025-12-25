@@ -2,6 +2,7 @@
 // tRPC API Client - Simplified Version
 
 import { authApi } from "./auth-api";
+import { serverConfig } from "./server-config";
 
 /**
  * 后端 API 类型定义（临时，稍后从后端生成）
@@ -51,10 +52,8 @@ class TrpcApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl =
-      (import.meta.env as any).VITE_TRPC_URL ||
-      (import.meta.env as any).VITE_API_URL ||
-      "http://localhost:3001/trpc";
+    // 使用配置管理器获取服务器地址 / Use config manager to get server URL
+    this.baseUrl = serverConfig.getBaseUrl();
   }
 
   /**

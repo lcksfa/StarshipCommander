@@ -11,6 +11,7 @@ import type {
   RefreshTokenResponse,
   User,
 } from "../types/auth";
+import { serverConfig } from "./server-config";
 
 /**
  * Authentication API Client
@@ -27,10 +28,8 @@ class AuthApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl =
-      (import.meta.env as any).VITE_TRPC_URL ||
-      (import.meta.env as any).VITE_API_URL ||
-      "http://localhost:3001/trpc";
+    // 使用配置管理器获取服务器地址 / Use config manager to get server URL
+    this.baseUrl = serverConfig.getBaseUrl();
   }
 
   /**

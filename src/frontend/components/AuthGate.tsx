@@ -6,7 +6,8 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { LoginForm } from "./auth/LoginForm";
 import { RegisterForm } from "./auth/RegisterForm";
-import { Rocket, Loader2 } from "lucide-react";
+import { ServerSettings } from "./ServerSettings";
+import { Rocket, Loader2, Settings } from "lucide-react";
 
 /**
  * AuthGate Component
@@ -32,6 +33,7 @@ interface AuthGateProps {
 export function AuthGate({ children }: AuthGateProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [isLoginView, setIsLoginView] = useState(true);
+  const [isServerSettingsOpen, setIsServerSettingsOpen] = useState(false);
 
   // 显示加载状态 / Show loading state
   if (isLoading) {
@@ -128,6 +130,18 @@ export function AuthGate({ children }: AuthGateProps) {
           {/* Auth Forms Container / 认证表单容器（右侧） */}
           {/* 小屏幕上占满宽度，大屏幕上固定宽度 / Full width on small screens, fixed width on large screens */}
           <div className="w-full max-w-md flex-shrink-0 px-2 sm:px-0">
+          {/* Server Settings Button / 服务器设置按钮 */}
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={() => setIsServerSettingsOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-neon-gold/10 border border-neon-gold/30 text-neon-gold hover:bg-neon-gold/20 transition-all group"
+              title="服务器设置 / Server Settings"
+            >
+              <Settings className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-bold">服务器设置 / Server Settings</span>
+            </button>
+          </div>
+
           {/* Toggle between Login and Register / 登录和注册切换 */}
           <div className="mb-6 flex gap-2 bg-slate-900/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
             <button
@@ -177,6 +191,17 @@ export function AuthGate({ children }: AuthGateProps) {
         </div>
         </div>
       </div>
+
+      {/* Server Settings Modal / 服务器设置模态框 */}
+      {isServerSettingsOpen && (
+        <ServerSettings
+          onClose={() => setIsServerSettingsOpen(false)}
+          onConfigured={() => {
+            // 配置更新后无需特别操作，用户可以继续登录/注册
+            // No special action needed after config, user can continue login/register
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import AddMissionModal from "./components/AddMissionModal";
 import CaptainsLog from "./components/CaptainsLog";
 import MissionCompleteModal from "./components/MissionCompleteModal";
 import { ProfileEdit } from "./components/ProfileEdit";
+import { ServerSettings } from "./components/ServerSettings";
 import { Toaster, toast } from "sonner";
 import { Tab, MissionCategory, getRankInChinese, Mission } from "./types";
 import { INITIAL_STATS } from "./constants";
@@ -58,6 +59,7 @@ const App: React.FC = () => {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false); // Profile edit modal / 资料编辑模态框
+  const [isServerSettingsOpen, setIsServerSettingsOpen] = useState(false); // Server settings modal / 服务器设置模态框
 
   // 任务完成弹窗状态 / Mission complete modal state
   const [completeModalMission, setCompleteModalMission] = useState<Mission | null>(null);
@@ -539,6 +541,14 @@ const App: React.FC = () => {
                   >
                     <Edit className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   </button>
+                  {/* Server Settings Button / 服务器设置按钮 */}
+                  <button
+                    onClick={() => setIsServerSettingsOpen(true)}
+                    className="p-2 rounded-full bg-white/10 hover:bg-neon-gold/20 text-white/60 hover:text-neon-gold transition-all group"
+                    title="服务器设置 / Server Settings"
+                  >
+                    <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </button>
                 </div>
                 <p className="text-neon-cyan font-bold mb-6 md:text-xl">
                   {t.level} {displayStats.level} {getRankInChinese(displayStats.rank)}
@@ -714,6 +724,18 @@ const App: React.FC = () => {
         isOpen={isProfileEditOpen}
         onClose={() => setIsProfileEditOpen(false)}
       />
+
+      {/* Server Settings Modal / 服务器设置模态框 */}
+      {isServerSettingsOpen && (
+        <ServerSettings
+          onClose={() => setIsServerSettingsOpen(false)}
+          onConfigured={() => {
+            // 配置更新后刷新数据 / Refresh data after configuration update
+            refetchMissions();
+            refetchStats();
+          }}
+        />
+      )}
     </div>
   );
 };
