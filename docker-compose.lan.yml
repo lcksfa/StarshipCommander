@@ -22,6 +22,7 @@ services:
       target: runner
     container_name: starship-backend
     restart: unless-stopped
+    user: "0:0"  # 使用 root 用户运行以修复数据库权限问题
     ports:
       - "3001:3001"  # 绑定到所有网络接口 / Bind to all interfaces
     environment:
