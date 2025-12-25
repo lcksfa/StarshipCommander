@@ -179,3 +179,8 @@ yarn.lock
 .playwright-mcp/
 playwright-report/
 test-results/
+
+# Capacitor / Android / iOS
+android/
+ios/
+.capacitor/
