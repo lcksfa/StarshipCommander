@@ -38,8 +38,39 @@ async function bootstrap() {
     allowedOrigins.push(...corsOrigins);
   }
 
+  // CORS 配置 - 支持移动端和 Web 应用
+  // CORS configuration - Support mobile and web apps
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow: boolean) => void,
+    ) => {
+      // 允许没有 origin 的请求（移动端、Postman、curl 等）
+      // Allow requests without origin (mobile apps, Postman, curl, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // 允许 file:// 协议（移动端）
+      // Allow file:// protocol (mobile apps)
+      if (origin.startsWith("file://")) {
+        return callback(null, true);
+      }
+
+      // 允许 capacitor:// 协议（Capacitor 移动端）
+      // Allow capacitor:// protocol (Capacitor mobile apps)
+      if (origin.startsWith("capacitor://") || origin.startsWith("http://localhost")) {
+        return callback(null, true);
+      }
+
+      // 检查是否在允许的来源列表中
+      // Check if in allowed origins list
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"), false);
+      }
+    },
     credentials: true,
   });
 

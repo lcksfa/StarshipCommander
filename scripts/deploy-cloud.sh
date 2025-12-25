@@ -146,13 +146,28 @@ deploy_services() {
     export DOMAIN
     export JWT_SECRET
 
-    # 根据是否初始化数据库选择不同的命令 / Choose command based on INIT_DB
-    if [ "$INIT_DB" = "true" ]; then
-        log_info "首次部署，包含数据库初始化 / First deployment with DB initialization..."
-        docker compose -f "$COMPOSE_FILE" --profile init up -d --build
+    # 检查 Docker 权限 / Check Docker permissions
+    if ! docker ps &> /dev/null; then
+        log_warning "检测到 Docker 权限问题 / Docker permission issue detected"
+        log_info "将使用 sudo 运行 Docker 命令 / Will use sudo for Docker commands"
+
+        # 使用 sudo 运行 docker compose / Use sudo for docker compose
+        if [ "$INIT_DB" = "true" ]; then
+            log_info "首次部署，包含数据库初始化 / First deployment with DB initialization..."
+            sudo docker compose -f "$COMPOSE_FILE" --profile init up -d --build
+        else
+            log_info "部署服务（不含数据库初始化）/ Deploying services (without DB init)..."
+            sudo docker compose -f "$COMPOSE_FILE" up -d --build
+        fi
     else
-        log_info "部署服务（不含数据库初始化）/ Deploying services (without DB init)..."
-        docker compose -f "$COMPOSE_FILE" up -d --build
+        # 有权限，直接运行 / Has permission, run directly
+        if [ "$INIT_DB" = "true" ]; then
+            log_info "首次部署，包含数据库初始化 / First deployment with DB initialization..."
+            docker compose -f "$COMPOSE_FILE" --profile init up -d --build
+        else
+            log_info "部署服务（不含数据库初始化）/ Deploying services (without DB init)..."
+            docker compose -f "$COMPOSE_FILE" up -d --build
+        fi
     fi
 
     log_success "服务已启动 / Services started"
@@ -164,6 +179,14 @@ wait_for_health() {
 
     local max_attempts=30
     local attempt=1
+
+    # 检查是否需要 sudo / Check if sudo is needed
+    if docker ps &> /dev/null; then
+        DOCKER_CMD="docker"
+    else
+        DOCKER_CMD="sudo docker"
+        log_info "使用 sudo 运行 Docker 命令 / Using sudo for Docker commands"
+    fi
 
     while [ $attempt -le $max_attempts ]; do
         if curl -sf http://localhost:3001/trpc/health > /dev/null 2>&1; then
@@ -178,6 +201,7 @@ wait_for_health() {
 
     if [ $attempt -gt $max_attempts ]; then
         log_error "后端服务启动超时 / Backend startup timeout"
+        log_info "查看日志 / Check logs: $DOCKER_CMD compose -f docker-compose.cloud.yml logs"
         return 1
     fi
 
@@ -191,6 +215,13 @@ wait_for_health() {
 
 # 显示部署结果 / Show deployment result
 show_result() {
+    # 确定是否需要 sudo / Determine if sudo is needed
+    if docker ps &> /dev/null; then
+        DOCKER_COMPOSE="docker compose"
+    else
+        DOCKER_COMPOSE="sudo docker compose"
+    fi
+
     echo ""
     echo "=========================================="
     echo "🎉 部署完成！/ Deployment Complete!"
@@ -204,15 +235,16 @@ show_result() {
     [ -n "$DOMAIN" ] && echo "  域名访问 / Domain:   https://$DOMAIN"
     echo ""
     echo "常用命令 / Common Commands:"
-    echo "  查看日志 / View logs:     docker compose -f $COMPOSE_FILE logs -f"
-    echo "  查看状态 / Check status:  docker compose -f $COMPOSE_FILE ps"
-    echo "  重启服务 / Restart:       docker compose -f $COMPOSE_FILE restart"
-    echo "  停止服务 / Stop:          docker compose -f $COMPOSE_FILE down"
+    echo "  查看日志 / View logs:     $DOCKER_COMPOSE -f docker-compose.cloud.yml logs -f"
+    echo "  查看状态 / Check status:  $DOCKER_COMPOSE -f docker-compose.cloud.yml ps"
+    echo "  重启服务 / Restart:       $DOCKER_COMPOSE -f docker-compose.cloud.yml restart"
+    echo "  停止服务 / Stop:          $DOCKER_COMPOSE -f docker-compose.cloud.yml down"
     echo ""
     echo "⚠️  重要提示 / Important Notes:"
     echo "  1. 请保存 JWT_SECRET: $JWT_SECRET"
     echo "  2. 建议配置 HTTPS（参考文档）/ Recommended to configure HTTPS (see docs)"
     echo "  3. 请配置防火墙规则 / Please configure firewall rules"
+    echo "  4. 如遇到权限问题，使用 sudo / If permission issue, use sudo"
     echo ""
 }
 
