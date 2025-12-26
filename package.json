@@ -60,7 +60,13 @@
     "android:release": "pnpm run build && pnpm run cap:build:android",
     "icons:generate": "node scripts/generate-icons.js",
     "icons:install": "pnpm run icons:generate && cp -r public/icons/mipmap-*/ic_*.png android/app/src/main/res/ && cp -r public/icons/web/*.png public/",
-    "icons:preview": "echo \"打开浏览器访问: file://$(pwd)/scripts/preview-icon.html\" && open scripts/preview-icon.html"
+    "icons:preview": "echo \"打开浏览器访问: file://$(pwd)/scripts/preview-icon.html\" && open scripts/preview-icon.html",
+    "worktree": "./scripts/git-worktree.sh",
+    "worktree:create": "./scripts/git-worktree.sh create",
+    "worktree:list": "./scripts/git-worktree.sh list",
+    "worktree:remove": "./scripts/git-worktree.sh remove",
+    "worktree:sync": "./scripts/git-worktree.sh sync",
+    "worktree:prune": "./scripts/git-worktree.sh prune"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
