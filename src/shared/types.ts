@@ -19,6 +19,7 @@ export interface Mission {
   emoji: string;
   isDaily: boolean;
   streak: number;
+  lastCompleted?: Date | string; // 最后完成时间 / Last completion time (for daily missions)
 }
 
 export interface LogEntry {

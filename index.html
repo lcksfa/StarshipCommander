@@ -64,6 +64,10 @@
                                 "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
                             stripes: "stripes 1s linear infinite",
                             "bounce-slow": "bounce 3s infinite",
+                            // 火焰动画 / Flame animations for streak badge
+                            "flame-flicker": "flame-flicker 2s ease-in-out infinite",
+                            "streak-pulse": "streak-pulse 2s ease-in-out infinite",
+                            "fade-in": "fade-in 0.3s ease-out",
                         },
                         keyframes: {
                             float: {
@@ -85,6 +89,45 @@
                             stripes: {
                                 "0%": { backgroundPosition: "0 0" },
                                 "100%": { backgroundPosition: "1rem 1rem" },
+                            },
+                            // 火焰闪烁动画 / Flame flicker animation
+                            "flame-flicker": {
+                                "0%, 100%": {
+                                    opacity: 1,
+                                    transform: "scale(1) rotate(0deg)",
+                                },
+                                "25%": {
+                                    opacity: 0.9,
+                                    transform: "scale(1.05) rotate(2deg)",
+                                },
+                                "50%": {
+                                    opacity: 1,
+                                    transform: "scale(1) rotate(0deg)",
+                                },
+                                "75%": {
+                                    opacity: 0.8,
+                                    transform: "scale(0.95) rotate(-2deg)",
+                                },
+                            },
+                            // 连续脉冲效果 / Streak pulse effect
+                            "streak-pulse": {
+                                "0%, 100%": {
+                                    boxShadow: "0 0 10px rgba(251, 146, 60, 0.3)",
+                                },
+                                "50%": {
+                                    boxShadow: "0 0 30px rgba(251, 146, 60, 0.6)",
+                                },
+                            },
+                            // 淡入动画 / Fade in animation
+                            "fade-in": {
+                                "0%": {
+                                    opacity: 0,
+                                    transform: "translateY(-10px)",
+                                },
+                                "100%": {
+                                    opacity: 1,
+                                    transform: "translateY(0)",
+                                },
                             },
                         },
                     },
@@ -140,6 +183,42 @@
                     transparent
                 );
                 background-size: 1rem 1rem;
+            }
+
+            /* 火焰效果样式 / Flame effect styles for streak badge */
+            .flame-icon.pulse {
+                animation: flame-flicker 2s ease-in-out infinite;
+            }
+
+            .flame-icon.glow {
+                animation: flame-flicker 1.5s ease-in-out infinite;
+                filter: drop-shadow(0 0 8px currentColor);
+            }
+
+            .flame-icon.particles {
+                animation: flame-flicker 2s ease-in-out infinite;
+                filter: drop-shadow(0 0 12px currentColor);
+            }
+
+            .flame-icon.particles::before {
+                content: "";
+                position: absolute;
+                width: 4px;
+                height: 4px;
+                background: currentColor;
+                border-radius: 50%;
+                animation: particle-rise 1.5s ease-out infinite;
+            }
+
+            @keyframes particle-rise {
+                0% {
+                    transform: translateY(0) scale(1);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(-20px) scale(0);
+                    opacity: 0;
+                }
             }
         </style>
         <script type="importmap">

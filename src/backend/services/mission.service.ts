@@ -477,7 +477,7 @@ export class MissionService {
       });
 
       return dbMissions.map((dbMission) =>
-        this.mapDbMissionToFrontend(dbMission),
+        this.mapDbMissionToFrontend(dbMission, userId),
       );
     } catch (error) {
       throw new ServiceError(
@@ -519,19 +519,40 @@ export class MissionService {
         },
       });
 
-      return userMissions.map((userMission) => ({
-        id: userMission.id,
-        userId: userMission.userId,
-        missionId: userMission.missionId,
-        mission: this.mapDbMissionToFrontend(userMission.mission),
-        isCompleted: userMission.isCompleted,
-        completedAt: userMission.completedAt,
-        streak: userMission.streak,
-        lastCompleted: userMission.lastCompleted,
-        cooldownUntil: userMission.cooldownUntil,
-        createdAt: userMission.createdAt,
-        updatedAt: userMission.updatedAt,
-      }));
+      return userMissions.map((userMission) => {
+        // 对于每日任务，需要检查今天是否已完成 / Check if daily mission is completed today
+        let isCompleted = userMission.isCompleted;
+
+        if (userMission.mission.isDaily && userMission.lastCompleted) {
+          // 获取今天的开始时间（00:00:00）/ Get today's start time
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          // 获取最后完成日期的开始时间 / Get last completed date's start time
+          const lastCompletedDate = new Date(userMission.lastCompleted);
+          lastCompletedDate.setHours(0, 0, 0, 0);
+
+          // 只有今天完成的才算完成 / Only count as completed if done today
+          isCompleted = lastCompletedDate.getTime() === today.getTime();
+        } else if (userMission.mission.isDaily && !userMission.lastCompleted) {
+          // 每日任务从未完成过 / Never completed daily mission
+          isCompleted = false;
+        }
+
+        return {
+          id: userMission.id,
+          userId: userMission.userId,
+          missionId: userMission.missionId,
+          mission: this.mapDbMissionToFrontend(userMission.mission),
+          isCompleted,
+          completedAt: userMission.completedAt,
+          streak: userMission.streak,
+          lastCompleted: userMission.lastCompleted,
+          cooldownUntil: userMission.cooldownUntil,
+          createdAt: userMission.createdAt,
+          updatedAt: userMission.updatedAt,
+        };
+      });
     } catch (error) {
       throw new ServiceError(
         `Failed to get user missions: ${getErrorMessage(error)}`,
@@ -750,10 +771,32 @@ export class MissionService {
     // 如果提供了 userId，从 UserMission 表中获取用户的完成状态
     let isCompleted = false;
     let streak = 0;
+    let lastCompleted: Date | string | undefined = undefined;
 
     if (userId && dbMission.userMissions && dbMission.userMissions.length > 0) {
       const userMission = dbMission.userMissions[0];
-      isCompleted = userMission.isCompleted;
+
+      // 对于每日任务，需要检查今天是否已完成 / Check if daily mission is completed today
+      if (dbMission.isDaily && userMission.lastCompleted) {
+        // 获取今天的开始时间（00:00:00）/ Get today's start time
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 获取最后完成日期的开始时间 / Get last completed date's start time
+        const lastCompletedDate = new Date(userMission.lastCompleted);
+        lastCompletedDate.setHours(0, 0, 0, 0);
+
+        // 只有今天完成的才算完成 / Only count as completed if done today
+        isCompleted = lastCompletedDate.getTime() === today.getTime();
+        lastCompleted = userMission.lastCompleted;
+      } else if (dbMission.isDaily && !userMission.lastCompleted) {
+        // 每日任务从未完成过 / Never completed daily mission
+        isCompleted = false;
+      } else {
+        // 非每日任务，直接使用数据库状态 / Non-daily mission, use database status directly
+        isCompleted = userMission.isCompleted;
+      }
+
       streak = userMission.streak || 0;
     }
 
@@ -768,6 +811,7 @@ export class MissionService {
       emoji: dbMission.emoji,
       isDaily: dbMission.isDaily,
       streak,
+      lastCompleted,
     };
   }
 

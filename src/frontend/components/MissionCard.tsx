@@ -6,11 +6,12 @@ import {
   Check,
   Zap,
   Coins,
-  Flame,
   Repeat,
   Hourglass,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import StreakBadge from "./StreakBadge";
+import StreakWarning from "./StreakWarning";
 
 interface MissionCardProps {
   mission: Mission;
@@ -75,22 +76,26 @@ const MissionCard: React.FC<MissionCardProps> = ({
             </span>
           </div>
 
-          {/* Streak Counter (Daily Only) */}
+          {/* Streak Badge (Daily Only) - 使用新的动态火焰徽章 / Using new dynamic flame badge */}
           {mission.isDaily && (
-            <div
-              className={`
-                    flex items-center gap-1.5 bg-slate-950/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-orange-500/30
-                    ${mission.streak > 0 ? "text-neon-orange shadow-[0_0_10px_rgba(251,146,60,0.3)]" : "text-slate-500"}
-                `}
-            >
-              <Flame
-                size={12}
-                fill={mission.streak > 0 ? "currentColor" : "none"}
-              />
-              <span className="text-[10px] font-black">{mission.streak}</span>
-            </div>
+            <StreakBadge
+              streak={mission.streak}
+              isCompleted={mission.isCompleted}
+              size="sm"
+              showLabel={false}
+            />
           )}
         </div>
+
+        {/* Streak Warning (Daily Only) - 断签警示 / Streak interruption warning */}
+        {mission.isDaily && (
+          <StreakWarning
+            streak={mission.streak}
+            isCompleted={mission.isCompleted}
+            isDaily={mission.isDaily}
+            lastCompleted={mission.lastCompleted}
+          />
+        )}
 
         {/* --- MAIN CONTENT --- */}
         <div
