@@ -138,6 +138,21 @@ async function bootstrap() {
       userId: z.string().min(1),
     }),
 
+    updateMission: z.object({
+      id: z.string().min(1),
+      title: z.string().min(1).optional(),
+      description: z.string().min(1).optional(),
+      xpReward: z.number().min(0).max(1000).optional(),
+      coinReward: z.number().min(0).max(500).optional(),
+      category: z.enum(["study", "health", "chore", "creative"]).optional(),
+      emoji: z.string().min(1).max(10).optional(),
+      difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
+    }),
+
+    deleteMission: z.object({
+      id: z.string().min(1),
+    }),
+
     getDailyMissions: z.object({
       userId: z.string().min(1),
     }),
@@ -268,6 +283,59 @@ async function bootstrap() {
           } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Unknown error";
             throw new Error(`Failed to complete mission: ${message}`);
+          }
+        }),
+
+      updateMission: procedure
+        .input(schemas.updateMission)
+        .mutation(async ({ input }) => {
+          try {
+            const { id, ...updateData } = input;
+            const mission = await missionService.updateMission(id, updateData);
+            return {
+              success: true,
+              data: mission,
+              message: "Mission updated successfully",
+            };
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            if (message.includes("not found")) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: message,
+              });
+            }
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Failed to update mission: ${message}`,
+            });
+          }
+        }),
+
+      deleteMission: procedure
+        .input(schemas.deleteMission)
+        .mutation(async ({ input }) => {
+          try {
+            const success = await missionService.deleteMission(input.id);
+            if (!success) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: `Mission with id ${input.id} not found`,
+              });
+            }
+            return {
+              success: true,
+              message: "Mission deleted successfully",
+            };
+          } catch (error: unknown) {
+            if (error instanceof TRPCError) {
+              throw error;
+            }
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: `Failed to delete mission: ${message}`,
+            });
           }
         }),
 

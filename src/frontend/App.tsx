@@ -8,6 +8,8 @@ import Hologram from "./components/Hologram";
 import AddMissionModal from "./components/AddMissionModal";
 import CaptainsLog from "./components/CaptainsLog";
 import MissionCompleteModal from "./components/MissionCompleteModal";
+import EditMissionModal from "./components/EditMissionModal";
+import DeleteMissionModal from "./components/DeleteMissionModal";
 import { ProfileEdit } from "./components/ProfileEdit";
 import { ServerSettings } from "./components/ServerSettings";
 import { Toaster, toast } from "sonner";
@@ -64,6 +66,10 @@ const App: React.FC = () => {
   // 任务完成弹窗状态 / Mission complete modal state
   const [completeModalMission, setCompleteModalMission] = useState<Mission | null>(null);
   const [isCompletingMission, setIsCompletingMission] = useState(false);
+
+  // 编辑和删除任务弹窗状态 / Edit and delete mission modal state
+  const [editModalMission, setEditModalMission] = useState<Mission | null>(null);
+  const [deleteModalMission, setDeleteModalMission] = useState<Mission | null>(null);
 
   // 任务完成 hook / Mission complete hook
   const { completeMission } = useCompleteMission();
@@ -130,6 +136,37 @@ const App: React.FC = () => {
     // 这个函数现在由 handleConfirmMissionComplete 处理
     // 保留空实现以避免错误 / This is now handled by handleConfirmMissionComplete
     // Kept empty to avoid errors
+  };
+
+  // 打开编辑任务弹窗 / Open edit mission modal
+  const handleEditMission = (mission: Mission) => {
+    setEditModalMission(mission);
+  };
+
+  // 关闭编辑任务弹窗 / Close edit mission modal
+  const handleCloseEditModal = () => {
+    setEditModalMission(null);
+  };
+
+  // 打开删除任务弹窗 / Open delete mission modal
+  const handleDeleteMission = (mission: Mission) => {
+    setDeleteModalMission(mission);
+  };
+
+  // 关闭删除任务弹窗 / Close delete mission modal
+  const handleCloseDeleteModal = () => {
+    setDeleteModalMission(null);
+  };
+
+  // 任务更新后刷新 / Refresh after mission update
+  const handleMissionUpdated = async () => {
+    await refetchMissions();
+  };
+
+  // 任务删除后刷新 / Refresh after mission delete
+  const handleMissionDeleted = async () => {
+    await refetchMissions();
+    await refetchStats();
   };
 
   const handleAddMission = async (missionData: {
@@ -506,6 +543,8 @@ const App: React.FC = () => {
                       onComplete={handleMissionComplete}
                       onOpenCompleteModal={handleOpenCompleteModal}
                       userId={userId}
+                      onEdit={handleEditMission}
+                      onDelete={handleDeleteMission}
                     />
                   ))}
                 </div>
@@ -694,6 +733,22 @@ const App: React.FC = () => {
         onConfirm={handleConfirmMissionComplete}
         onClose={handleCloseCompleteModal}
         isLoading={isCompletingMission}
+      />
+
+      {/* Edit Mission Modal / 编辑任务弹窗 */}
+      <EditMissionModal
+        isOpen={editModalMission !== null}
+        mission={editModalMission}
+        onClose={handleCloseEditModal}
+        onUpdated={handleMissionUpdated}
+      />
+
+      {/* Delete Mission Modal / 删除任务弹窗 */}
+      <DeleteMissionModal
+        isOpen={deleteModalMission !== null}
+        mission={deleteModalMission}
+        onClose={handleCloseDeleteModal}
+        onDeleted={handleMissionDeleted}
       />
 
       {/* Mission Accomplished Overlay - 已移除，流程简化 / Removed for simplified flow */}

@@ -218,10 +218,33 @@ class TrpcApiClient {
   }
 
   /**
-   * 完成任务
+   * 完成任务 / Complete mission
    */
   async completeMission(input: { missionId: string; userId: string }) {
     return this.mutate<any>("/missions.completeMission", input);
+  }
+
+  /**
+   * 更新任务 / Update mission
+   */
+  async updateMission(input: {
+    id: string;
+    title?: string;
+    description?: string;
+    xpReward?: number;
+    coinReward?: number;
+    category?: "study" | "health" | "chore" | "creative";
+    emoji?: string;
+    difficulty?: "EASY" | "MEDIUM" | "HARD";
+  }) {
+    return this.mutate<any>("/missions.updateMission", input);
+  }
+
+  /**
+   * 删除任务 / Delete mission
+   */
+  async deleteMission(input: { id: string }) {
+    return this.mutate<any>("/missions.deleteMission", input);
   }
 
   /**

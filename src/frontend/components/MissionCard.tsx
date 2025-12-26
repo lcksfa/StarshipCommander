@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
 import { Mission } from "../types";
 import { useCompleteMission } from "../hooks/useMissions";
 import {
@@ -8,9 +9,9 @@ import {
   Coins,
   Repeat,
   Hourglass,
-  Activity,
-  Crown,
-  Ribbon,
+  Edit3,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import StreakBadge from "./StreakBadge";
@@ -21,6 +22,8 @@ interface MissionCardProps {
   onComplete: (id: string) => void;
   onOpenCompleteModal: (mission: Mission) => void; // 打开完成弹窗 / Open complete modal
   userId: string; // 添加 userId 参数 / Add userId parameter
+  onEdit?: (mission: Mission) => void; // 编辑任务回调 / Edit mission callback
+  onDelete?: (mission: Mission) => void; // 删除任务回调 / Delete mission callback
 }
 
 /**
@@ -87,12 +90,17 @@ const CATEGORY_THEMES = {
 
 const MissionCard: React.FC<MissionCardProps> = ({
   mission,
-  onComplete,
+  onComplete, // eslint-disable-line @typescript-eslint/no-unused-vars
   onOpenCompleteModal,
-  userId,
+  userId, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onEdit,
+  onDelete,
 }) => {
   const { t } = useLanguage();
-  const { completeMission, isLoading } = useCompleteMission();
+  const { isLoading } = useCompleteMission();
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
 
   const theme = CATEGORY_THEMES[mission.category] || CATEGORY_THEMES.study;
 
@@ -102,6 +110,70 @@ const MissionCard: React.FC<MissionCardProps> = ({
     // 打开任务完成确认弹窗 / Open mission complete confirmation modal
     onOpenCompleteModal(mission);
   };
+
+  const handleEdit = () => {
+    setShowActionsMenu(false);
+    setMenuPosition(null);
+    onEdit?.(mission);
+  };
+
+  const handleDelete = () => {
+    setShowActionsMenu(false);
+    setMenuPosition(null);
+    onDelete?.(mission);
+  };
+
+  // 打开菜单时计算按钮位置
+  const handleOpenMenu = () => {
+    if (menuButtonRef.current) {
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4, // 按钮底部 + 4px 间距
+        left: rect.right - 140, // 右对齐，假设菜单宽度 140px
+      });
+    }
+    setShowActionsMenu(true);
+  };
+
+  // 点击菜单外部关闭菜单 / Click outside to close menu
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // 检查点击是否在菜单内部（编辑/删除按钮）
+      const menuElement = target.closest('[data-actions-menu]');
+      if (menuElement) {
+        return; // 点击菜单内部，不关闭
+      }
+
+      // 检查点击是否是菜单按钮
+      const menuButton = menuButtonRef.current;
+      if (menuButton && (menuButton === target || menuButton.contains(target))) {
+        return; // 点击菜单按钮，不关闭
+      }
+
+      // 点击其他地方，关闭菜单
+      setShowActionsMenu(false);
+      setMenuPosition(null);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowActionsMenu(false);
+        setMenuPosition(null);
+      }
+    };
+
+    if (showActionsMenu) {
+      // 使用 click 而不是 mousedown，确保按钮 onClick 先执行
+      document.addEventListener("click", handleClickOutside, { capture: true });
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("click", handleClickOutside, { capture: true });
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [showActionsMenu]);
 
   const isCompleted = mission.isCompleted && !mission.isDaily;
   const isDailyCompletedToday = mission.isCompleted && mission.isDaily;
@@ -243,15 +315,59 @@ const MissionCard: React.FC<MissionCardProps> = ({
                 </span>
               </div>
 
-              {/* Streak Badge (Daily Only) - 使用新的动态火焰徽章 / Using new dynamic flame badge */}
-              {mission.isDaily && (
-                <StreakBadge
-                  streak={mission.streak}
-                  isCompleted={mission.isCompleted}
-                  size="sm"
-                  showLabel={false}
-                />
-              )}
+              {/* Right Side Actions */}
+              <div className="flex items-center gap-2 relative z-20" ref={menuButtonRef}>
+                {/* Streak Badge (Daily Only) - 使用新的动态火焰徽章 / Using new dynamic flame badge */}
+                {mission.isDaily && (
+                  <StreakBadge
+                    streak={mission.streak}
+                    isCompleted={mission.isCompleted}
+                    size="sm"
+                    showLabel={false}
+                  />
+                )}
+
+                {/* Actions Menu Button - 编辑和删除按钮 */}
+                <div className="relative">
+                  <button
+                    ref={menuButtonRef}
+                    onClick={handleOpenMenu}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-all cursor-pointer"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+
+                  {/* Dropdown Menu - 使用 Portal 渲染到 body，避免层级和事件冲突 / Use Portal to render to body */}
+                  {showActionsMenu &&
+                    menuPosition &&
+                    ReactDOM.createPortal(
+                      <div
+                        data-actions-menu={`mission-${mission.id}`}
+                        className="fixed z-[9999] bg-slate-900/95 backdrop-blur-md border border-white/20 rounded-xl shadow-xl overflow-hidden min-w-[140px] animate-in fade-in zoom-in-95 duration-200"
+                        style={{
+                          top: `${menuPosition.top}px`,
+                          left: `${menuPosition.left}px`,
+                        }}
+                      >
+                        <button
+                          onClick={handleEdit}
+                          className="w-full px-4 py-2.5 flex items-center gap-2 text-sm text-white/80 hover:bg-white/10 hover:text-neon-cyan transition-all text-left cursor-pointer"
+                        >
+                          <Edit3 size={14} />
+                          <span>编辑 / Edit</span>
+                        </button>
+                        <button
+                          onClick={handleDelete}
+                          className="w-full px-4 py-2.5 flex items-center gap-2 text-sm text-white/80 hover:bg-red-500/20 hover:text-red-400 transition-all text-left border-t border-white/10 cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                          <span>删除 / Delete</span>
+                        </button>
+                      </div>,
+                      document.body,
+                    )}
+                </div>
+              </div>
             </div>
 
             {/* Streak Warning (Daily Only) - 断签警示 / Streak interruption warning */}
