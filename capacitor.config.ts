@@ -27,12 +27,15 @@ const config: CapacitorConfig = {
     // 启用混合内容以支持开发环境的 HTTP 连接
     // Enable hybrid content for HTTP connections in development
     allowMixedContent: true,
-    // 捕获输入以防止软键盘问题
-    // Capture input to prevent soft keyboard issues
-    captureInput: true,
+    // 禁用输入捕获以避免干扰 React 受控组件
+    // Disable input capture to avoid interference with React controlled components
+    captureInput: false,
     // 启用 webContents 调试
     // Enable webContents debugging
     webContentsDebuggingEnabled: true,
+    // 保持 WebView 在软键盘弹出时不重新布局
+    // Keep WebView from relayouting when soft keyboard appears
+    keyboardDisplayRequiresUserAction: false,
   },
 };
 
