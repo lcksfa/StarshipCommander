@@ -14,6 +14,18 @@ export type {
 
 export { Tab };
 
+// 周分组类型 / Week grouping type
+// 用于历史记录的周分组显示 / Week grouping for history display
+export interface WeekGroup {
+  weekStart: string; // 周一的日期 / Monday date (YYYY-MM-DD)
+  weekEnd: string; // 周日的日期 / Sunday date (YYYY-MM-DD)
+  weekLabel: string; // 周标签："本周" | "上周" | "Stardate..." / Week label
+  isCurrentWeek: boolean; // 是否是当前周 / Is current week
+  totalCount: number; // 本周任务总数 / Total mission count in week
+  totalXp: number; // 本周总 XP / Total XP in week
+  logs: LogEntry[]; // 本周的日志条目 / Log entries in week
+}
+
 // 军衔中文映射 / Rank Chinese translations
 export const RANK_ZH_MAP: Record<string, string> = {
   Cadet: "学员",

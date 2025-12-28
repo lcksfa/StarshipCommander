@@ -678,7 +678,7 @@ export class MissionService {
 
   /**
    * 获取用户历史记录列表 / Get user history
-   * 暂时简化实现 / Temporarily simplified implementation
+   * 返回按周分组的数据 / Returns data grouped by week (Monday to Sunday)
    */
   async getUserHistory(
     userId: string,
@@ -735,6 +735,154 @@ export class MissionService {
         500,
       );
     }
+  }
+
+  /**
+   * 获取按周分组的历史记录 / Get user history grouped by week
+   * 周分组逻辑：周一到周日 / Week grouping: Monday to Sunday
+   * 排序：当前周在最前，然后按日期降序 / Sorting: current week first, then descending by date
+   */
+  async getUserHistoryGroupedByWeek(
+    userId: string,
+    filters?: {
+      dateFrom?: Date;
+      dateTo?: Date;
+      category?: MissionCategory;
+    },
+  ): Promise<import("../types/backend.types.js").WeekGroup[]> {
+    try {
+      const where: MissionHistoryWhereInput = {
+        userId,
+      };
+
+      // 日期过滤 / Date filter
+      if (filters?.dateFrom || filters?.dateTo) {
+        where.completedAt = {};
+        if (filters.dateFrom) where.completedAt.gte = filters.dateFrom;
+        if (filters.dateTo) where.completedAt.lte = filters.dateTo;
+      }
+
+      const historyData = await this.prisma.missionHistory.findMany({
+        where,
+        orderBy: {
+          completedAt: "desc", // 最新的在前 / Newest first
+        },
+        include: {
+          mission: true,
+        },
+      });
+
+      // 转换为 LogEntry 格式 / Convert to LogEntry format
+      const logEntries: LogEntry[] = historyData.map((entry) => ({
+        id: entry.id,
+        missionId: entry.missionId,
+        missionTitle: entry.mission?.title || "Unknown Mission",
+        xpEarned: entry.xpEarned,
+        coinEarned: entry.coinEarned,
+        timestamp: entry.completedAt.getTime(),
+        category: entry.mission
+          ? mapDbToFrontendCategory(entry.mission.category)
+          : "study",
+      }));
+
+      // 按周分组 / Group by week
+      const weekGroupsMap = new Map<string, LogEntry[]>();
+
+      logEntries.forEach((entry) => {
+        const date = new Date(entry.timestamp);
+        const monday = this.getMonday(date);
+        const weekKey = this.getLocalISODate(monday); // 使用本地时间 / Use local time
+
+        if (!weekGroupsMap.has(weekKey)) {
+          weekGroupsMap.set(weekKey, []);
+        }
+        weekGroupsMap.get(weekKey)!.push(entry);
+      });
+
+      // 转换为 WeekGroup 数组 / Convert to WeekGroup array
+      const today = new Date();
+      const currentWeekMonday = this.getMonday(today);
+      const lastWeekMonday = new Date(currentWeekMonday);
+      lastWeekMonday.setDate(lastWeekMonday.getDate() - 7);
+
+      const weekGroups: import("../types/backend.types.js").WeekGroup[] = Array.from(
+        weekGroupsMap.entries(),
+      ).map(([weekStart, logs]) => {
+        const monday = new Date(weekStart);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+
+        const isCurrentWeek =
+          weekStart === this.getLocalISODate(currentWeekMonday); // 使用本地时间 / Use local time
+        const isLastWeek =
+          weekStart === this.getLocalISODate(lastWeekMonday); // 使用本地时间 / Use local time
+
+        let weekLabel = "";
+        if (isCurrentWeek) {
+          weekLabel = "本周";
+        } else if (isLastWeek) {
+          weekLabel = "上周";
+        } else {
+          weekLabel = `Stardate ${monday.getFullYear()}.${monday.getMonth() + 1}.${monday.getDate()}`;
+        }
+
+        const totalCount = logs.length;
+        const totalXp = logs.reduce((sum, log) => sum + log.xpEarned, 0);
+
+        return {
+          weekStart,
+          weekEnd: this.getLocalISODate(sunday), // 使用本地时间 / Use local time
+          weekLabel,
+          isCurrentWeek,
+          totalCount,
+          totalXp,
+          logs: logs.sort((a, b) => b.timestamp - a.timestamp), // 按时间降序 / Sort by time descending
+        };
+      });
+
+      // 排序：当前周在前，然后按日期降序 / Sort: current week first, then descending by date
+      weekGroups.sort((a, b) => {
+        if (a.isCurrentWeek) return -1;
+        if (b.isCurrentWeek) return 1;
+        return b.weekStart.localeCompare(a.weekStart);
+      });
+
+      return weekGroups;
+    } catch (error) {
+      throw new ServiceError(
+        `Failed to get user history grouped by week: ${getErrorMessage(error)}`,
+        "GET_USER_HISTORY_GROUPED_ERROR",
+        500,
+      );
+    }
+  }
+
+  /**
+   * 辅助方法：获取给定日期所在周的周一（本地时间）
+   * Helper method: Get Monday of the week for given date (local time)
+   */
+  private getMonday(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 周日(0)需要特殊处理 / Sunday(0) needs special handling
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  /**
+   * 辅助方法：获取本地时间的 YYYY-MM-DD 格式字符串
+   * Helper method: Get YYYY-MM-DD format string in local time
+   * 重要：使用本地时间而不是 UTC 时间，因为在中国等 UTC+8 时区，
+   *        使用 toISOString() 会导致日期偏移
+   * Important: Use local time instead of UTC, because in UTC+8 timezones like China,
+   *            using toISOString() will cause date offset
+   */
+  private getLocalISODate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**

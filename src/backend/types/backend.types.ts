@@ -189,6 +189,30 @@ export interface MissionStats {
   }[];
 }
 
+// 周分组类型 - Week grouping type
+// 用于历史记录的周分组显示 / Week grouping for history display
+export interface WeekGroup {
+  weekStart: string; // 周一的日期 / Monday date (YYYY-MM-DD)
+  weekEnd: string; // 周日的日期 / Sunday date (YYYY-MM-DD)
+  weekLabel: string; // 周标签："本周" | "上周" | "Stardate..." / Week label
+  isCurrentWeek: boolean; // 是否是当前周 / Is current week
+  totalCount: number; // 本周任务总数 / Total mission count in week
+  totalXp: number; // 本周总 XP / Total XP in week
+  logs: LogEntry[]; // 本周的日志条目 / Log entries in week
+}
+
+// 日志条目类型 - Log entry type
+// 单条历史记录 / Single history record
+export interface LogEntry {
+  id: string;
+  missionId: string;
+  missionTitle: string;
+  xpEarned: number;
+  coinEarned: number;
+  timestamp: number; // Unix timestamp
+  category: MissionCategory;
+}
+
 // 用户任务关联类型
 export interface UserMission {
   id: string;

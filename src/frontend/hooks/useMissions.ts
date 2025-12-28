@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { apiClient } from "../lib/trpc";
-import { Mission, UserStats, LogEntry, MissionCategory } from "../types";
+import { Mission, UserStats, LogEntry, MissionCategory, WeekGroup } from "../types";
 
 /**
  * 获取所有任务的自定义 Hook
@@ -122,7 +122,8 @@ export function useCompleteMission() {
 }
 
 /**
- * 获取用户历史记录的自定义 Hook
+ * 获取用户历史记录的自定义 Hook（按周分组）
+ * Get user history grouped by week (Monday to Sunday)
  */
 export function useHistory(
   userId: string,
@@ -134,7 +135,7 @@ export function useHistory(
     offset?: number;
   },
 ) {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [weekGroups, setWeekGroups] = useState<WeekGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -147,11 +148,8 @@ export function useHistory(
         userId,
         dateFrom: filters?.dateFrom?.toISOString(),
         dateTo: filters?.dateTo?.toISOString(),
-        category: filters?.category,
-        limit: filters?.limit,
-        offset: filters?.offset,
       });
-      setLogs(response.data || []);
+      setWeekGroups(response.data || []);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch history";
@@ -169,5 +167,5 @@ export function useHistory(
     }
   }, [userId, JSON.stringify(filters)]);
 
-  return { logs, isLoading, error, refetch: fetchHistory };
+  return { weekGroups, isLoading, error, refetch: fetchHistory };
 }

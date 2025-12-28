@@ -172,7 +172,7 @@ export class HistoryController {
   }
 
   @Get(":userId")
-  @ApiOperation({ summary: "获取用户历史记录" })
+  @ApiOperation({ summary: "获取用户历史记录（按周分组）" })
   @ApiParam({ name: "userId", description: "用户 ID" })
   @ApiQuery({ name: "dateFrom", required: false, type: String })
   @ApiQuery({ name: "dateTo", required: false, type: String })
@@ -183,23 +183,19 @@ export class HistoryController {
     @Query("dateTo") dateTo?: string,
   ) {
     try {
-      // Only pass period if both dates are provided
-      // 只有当两个日期都提供时才传递 period
-      const period =
-        dateFrom && dateTo
-          ? {
-              from: new Date(dateFrom),
-              to: new Date(dateTo),
-            }
-          : undefined;
+      const filters = {
+        dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+        dateTo: dateTo ? new Date(dateTo) : undefined,
+      };
 
-      const stats = await this.missionService.getMissionStats(
+      const weekGroups = await this.missionService.getUserHistoryGroupedByWeek(
         userId,
-        period,
+        filters,
       );
+
       return {
         success: true,
-        data: stats,
+        data: weekGroups,
       };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Unknown error";

@@ -381,17 +381,16 @@ async function bootstrap() {
         .input(schemas.getUserHistory)
         .query(async ({ input }) => {
           try {
-            const history = await missionService.getUserHistory(input.userId, {
+            // 使用按周分组的历史记录 API / Use grouped by week history API
+            const weekGroups = await missionService.getUserHistoryGroupedByWeek(input.userId, {
               dateFrom: input.dateFrom ? new Date(input.dateFrom) : undefined,
               dateTo: input.dateTo ? new Date(input.dateTo) : undefined,
               category: input.category,
-              limit: input.limit,
-              offset: input.offset,
             });
             return {
               success: true,
-              data: history,
-              count: history.length,
+              data: weekGroups,
+              count: weekGroups.length,
             };
           } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Unknown error";
