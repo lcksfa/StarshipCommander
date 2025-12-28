@@ -285,10 +285,13 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
                                   key={entry.id}
                                   className="bg-black/40 border border-white/5 border-l-2 border-l-neon-green/50 rounded-r-xl p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 hover:bg-white/5 transition-colors group"
                                 >
-                                  {/* Time only / 仅时间 */}
-                                  <div className="text-slate-500 font-mono text-xs whitespace-nowrap min-w-[60px] flex items-center gap-2">
+                                  {/* Date & Time / 日期和时间 */}
+                                  <div className="text-slate-500 font-mono text-xs whitespace-nowrap min-w-[100px] flex items-center gap-2">
                                     <Terminal size={12} />
-                                    {new Date(entry.timestamp).toLocaleTimeString([], {
+                                    {new Date(entry.timestamp).toLocaleDateString('zh-CN', {
+                                      month: '2-digit',
+                                      day: '2-digit',
+                                    })} {new Date(entry.timestamp).toLocaleTimeString([], {
                                       hour: '2-digit',
                                       minute: '2-digit',
                                       hour12: false,
