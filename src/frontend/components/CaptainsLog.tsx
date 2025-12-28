@@ -332,14 +332,16 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
                         <div
                           key={dateGroup.date}
                           id={`date-${dateGroup.date}`}
-                          className={`relative transition-all duration-300 ${isSelected ? 'rounded-lg' : ''}`}
+                          className={`relative transition-all duration-300 rounded-lg ${
+                            isSelected ? 'ring-2 ring-neon-purple ring-offset-2 ring-offset-black bg-neon-purple/5' : ''
+                          }`}
                         >
                           {/* Date Header - Collapsible */}
                           <div
                             onClick={() => toggleDate(dateGroup.date)}
-                            className={`flex items-center gap-3 mb-2 cursor-pointer hover:bg-white/5 transition-colors p-2 -ml-2 rounded-lg group ${
-                              isSelected ? 'bg-neon-purple/10 border border-neon-purple/30' : ''
-                            }`}
+                            className={`flex items-center gap-3 mb-2 cursor-pointer hover:bg-white/5 transition-colors p-2 -ml-2 rounded-t-lg ${
+                              isDateExpanded ? 'rounded-b-none' : 'rounded-lg'
+                            } group ${isSelected ? 'bg-neon-purple/10' : ''}`}
                           >
                             <div className="w-2 h-2 rounded-full bg-neon-purple shadow-[0_0_8px_rgba(168,85,247,0.5)] relative z-10"></div>
                             {isDateExpanded ? (
@@ -363,7 +365,9 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
 
                           {/* Date Entries - Only show when date is expanded */}
                           {isDateExpanded && (
-                            <div className="space-y-2 pl-4">
+                            <div className={`space-y-2 pl-4 pr-2 pb-2 -ml-2 rounded-b-lg ${
+                              isSelected ? 'bg-neon-purple/5' : ''
+                            }`}>
                               {dateGroup.logs.map((entry) => (
                                 <div
                                   key={entry.id}
