@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { UserStats, WeekGroup, LogEntry } from "../types";
 import { ClipboardList, Terminal, Zap, CheckCircle2, ChevronDown, ChevronRight, Calendar } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -28,6 +28,12 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
   // 管理日期的折叠/展开状态 / Manage date collapse/expand state
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
+  // 管理选中的日期（用于高亮显示）/ Manage selected date (for highlighting)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // 引用日期分组容器，用于滚动 / Ref to date groups container for scrolling
+  const dateGroupsRef = useRef<HTMLDivElement>(null);
+
   // 切换周的展开/折叠状态 / Toggle week expand/collapse
   const toggleWeek = (weekStart: string) => {
     setExpandedWeeks((prev) => {
@@ -47,11 +53,63 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
       const newSet = new Set(prev);
       if (newSet.has(date)) {
         newSet.delete(date);
+        // 如果折叠的是当前选中的日期，清除选中状态
+        // If collapsing the currently selected date, clear selection
+        if (selectedDate === date) {
+          setSelectedDate(null);
+        }
       } else {
         newSet.add(date);
+        // 设置选中的日期 / Set selected date
+        setSelectedDate(date);
       }
       return newSet;
     });
+  };
+
+  // 处理点击柱形图的某一天 / Handle click on a day in the bar chart
+  const handleBarClick = (dayIndex: number) => {
+    // 获取当前展开的周 / Get the currently expanded week
+    const expandedWeek = weekDateGroups.find((wg) => expandedWeeks.has(wg.weekStart)) || weekDateGroups.find((wg) => wg.isCurrentWeek);
+
+    if (!expandedWeek) return;
+
+    // 计算 dayIndex 对应的日期 / Calculate the date for dayIndex
+    // dayIndex: 0=周一, 1=周二, ..., 6=周日
+    // 我们需要找到 weekStart（周一）对应的日期，然后加上 dayIndex 天
+    const weekStartDate = new Date(expandedWeek.weekStart);
+    const targetDate = new Date(weekStartDate);
+    targetDate.setDate(targetDate.getDate() + dayIndex);
+
+    const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // 查找该日期是否有任务 / Check if this date has tasks
+    const dateGroup = expandedWeek.dateGroups.find((dg) => dg.date === targetDateStr);
+
+    if (dateGroup) {
+      // 展开包含该日期的周（如果还没展开）
+      // Expand the week containing this date (if not already expanded)
+      setExpandedWeeks((prev) => new Set([...prev, expandedWeek.weekStart]));
+
+      // 展开该日期 / Expand this date
+      setExpandedDates((prev) => new Set([...prev, targetDateStr]));
+
+      // 设置选中的日期 / Set selected date
+      setSelectedDate(targetDateStr);
+
+      // 滚动到该日期 / Scroll to this date
+      setTimeout(() => {
+        const dateElement = document.getElementById(`date-${targetDateStr}`);
+        if (dateElement) {
+          dateElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 添加高亮动画 / Add highlight animation
+          dateElement.classList.add('ring-2', 'ring-neon-purple', 'ring-offset-2', 'ring-offset-black');
+          setTimeout(() => {
+            dateElement.classList.remove('ring-2', 'ring-neon-purple', 'ring-offset-2', 'ring-offset-black');
+          }, 2000);
+        }
+      }, 100);
+    }
   };
 
   // 默认展开当前周 / Default expand current week
@@ -166,17 +224,24 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
                   key={idx}
                   className="flex-1 flex flex-col items-center justify-end gap-2 group h-full"
                 >
-                  {/* The Bar */}
+                  {/* The Bar - Clickable */}
                   <div
+                    onClick={() => data.active && handleBarClick(idx)}
                     className={`
                       w-full rounded-t-md transition-all duration-1000 relative overflow-hidden flex items-end
-                      ${data.active ? "bg-neon-green shadow-[0_0_10px_rgba(74,222,128,0.4)]" : "bg-slate-800"}
+                      ${data.active ? "bg-neon-green shadow-[0_0_10px_rgba(74,222,128,0.4)] cursor-pointer hover:shadow-[0_0_15px_rgba(74,222,128,0.6)] hover:scale-105" : "bg-slate-800"}
                       ${isToday && !data.active ? "bg-slate-700" : ""}
                     `}
                     style={{ height: `${data.score}%` }}
                   >
                     {data.active && (
                       <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    )}
+                    {/* Tooltip hint */}
+                    {data.active && (
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/90 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
+                        点击查看详情
+                      </div>
                     )}
                   </div>
 
@@ -258,16 +323,23 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
 
                 {/* Date Groups - Only show when week is expanded */}
                 {isExpanded && (
-                  <div className="space-y-3 pl-4 animate-in slide-in-from-left-2 fade-in duration-300">
+                  <div className="space-y-3 pl-4 animate-in slide-in-from-left-2 fade-in duration-300" ref={dateGroupsRef}>
                     {weekGroup.dateGroups.map((dateGroup) => {
                       const isDateExpanded = expandedDates.has(dateGroup.date);
+                      const isSelected = selectedDate === dateGroup.date;
 
                       return (
-                        <div key={dateGroup.date} className="relative">
+                        <div
+                          key={dateGroup.date}
+                          id={`date-${dateGroup.date}`}
+                          className={`relative transition-all duration-300 ${isSelected ? 'rounded-lg' : ''}`}
+                        >
                           {/* Date Header - Collapsible */}
                           <div
                             onClick={() => toggleDate(dateGroup.date)}
-                            className="flex items-center gap-3 mb-2 cursor-pointer hover:bg-white/5 transition-colors p-2 -ml-2 rounded-lg group"
+                            className={`flex items-center gap-3 mb-2 cursor-pointer hover:bg-white/5 transition-colors p-2 -ml-2 rounded-lg group ${
+                              isSelected ? 'bg-neon-purple/10 border border-neon-purple/30' : ''
+                            }`}
                           >
                             <div className="w-2 h-2 rounded-full bg-neon-purple shadow-[0_0_8px_rgba(168,85,247,0.5)] relative z-10"></div>
                             {isDateExpanded ? (
