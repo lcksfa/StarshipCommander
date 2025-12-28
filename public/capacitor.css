@@ -35,10 +35,24 @@
   padding-top: env(safe-area-inset-top);
 }
 
+/* Android 特定优化：确保根容器有足够的顶部间距 / Android-specific: Ensure root container has enough top spacing */
+.capacitor-android #root {
+  /* 使用 max 确保至少有默认状态栏高度 / Use max to ensure at least default status bar height */
+  padding-top: max(env(safe-area-inset-top), 24px);
+  /* 默认 Android 状态栏高度 / Default Android status bar height */
+  min-height: 24px;
+}
+
 /* iOS 状态栏 / iOS status bar */
 .capacitor-ios {
   /* iOS 需要更大的顶部间距 / iOS needs larger top spacing */
   padding-top: max(20px, env(safe-area-inset-top));
+}
+
+/* iOS 特定优化：确保根容器有足够的顶部间距 / iOS-specific: Ensure root container has enough top spacing */
+.capacitor-ios #root {
+  /* iOS 状态栏通常更高 / iOS status bar is usually taller */
+  padding-top: max(env(safe-area-inset-top), 44px);
 }
 
 /* ============================================

@@ -44,9 +44,6 @@ RUN pnpm build:backend
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# 安装 dumb-init（正确的信号处理）
-RUN apk add --no-cache dumb-init
-
 # 创建非 root 用户
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
@@ -62,9 +59,13 @@ COPY --from=builder /app/src/backend/dist ./src/backend/dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
 
+# 复制启动脚本并设置权限
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # 创建日志目录
 RUN mkdir -p logs && \
-    chown -R nestjs:nodejs logs
+    chown -R nestjs:nodejs /app/logs /app/prisma
 
 # 切换到非 root 用户
 USER nestjs
@@ -76,6 +77,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/trpc/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# 使用 dumb-init 启动
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "src/backend/dist/backend/main.js"]
+# 使用自定义启动脚本（会先执行数据库初始化）
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

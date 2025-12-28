@@ -144,6 +144,69 @@ curl http://localhost:3000/health
 
 ---
 
+## ✨ 数据库自动初始化
+
+从当前版本开始,后端容器启动时会**自动初始化数据库 schema**,无需手动执行迁移命令。
+
+### 自动化流程
+
+容器启动时会按以下顺序执行：
+
+1. **数据库 Schema 初始化**
+   - 自动执行 `prisma db push`
+   - 创建所有必要的数据表
+   - 确保数据库结构最新
+
+2. **启动后端服务**
+   - Schema 初始化成功后
+   - 自动启动 NestJS 服务器
+
+3. **健康检查**
+   - 等待服务就绪
+   - 通过健康检查后才接受流量
+
+### 查看启动日志
+
+```bash
+# 查看后端启动日志
+docker-compose logs backend | grep "🔧\|✅\|🌟"
+
+# 预期输出示例
+# 🔧 Initializing database schema...
+# ✅ Database schema initialized successfully
+# 🌟 Starting backend server...
+```
+
+### 注意事项
+
+- **首次启动**：数据库文件会自动创建,无需手动操作
+- **Schema 更新**：如果 Prisma schema 有变更,重启容器会自动同步
+- **数据安全**：自动初始化不会影响已有数据,只更新表结构
+- **失败处理**：如果初始化失败,容器会停止并记录错误日志
+
+### 手动数据库操作
+
+如果需要手动管理数据库：
+
+```bash
+# 进入后端容器
+docker-compose exec backend sh
+
+# 手动推送 schema
+npx prisma db push
+
+# 重置数据库（⚠️ 会删除所有数据）
+npx prisma migrate reset --force
+
+# 查看 Prisma Studio（数据库 GUI）
+npx prisma studio
+
+# 退出容器
+exit
+```
+
+---
+
 ## 📱 访问应用
 
 部署完成后，你可以通过以下地址访问应用：

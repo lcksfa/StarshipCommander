@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     // 配置为局域网服务器地址 / Configure for LAN server address
     // 移动端将从局域网服务器加载应用，而不是打包的资源
     // Mobile app will load from LAN server instead of bundled resources
-    url: 'http://192.168.0.3:3000',
+    url: 'http://192.168.1.34:3000',
     androidScheme: 'https',
     // 开发环境配置：允许连接开发服务器
     // Development configuration: Allow connection to dev server
@@ -19,8 +19,11 @@ const config: CapacitorConfig = {
     // 允许导航到外部 URL
     // Allow navigation to external URLs
     allowNavigation: [
-      'http://192.168.0.3:*',
+      'http://192.168.1.34:*',
       'http://192.168.1.*:*',
+      'http://192.168.0.*:*',
+      'http://10.0.0.*:*',
+      'http://172.16.*:*',
       'http://localhost:*',
     ],
   },
@@ -37,6 +40,13 @@ const config: CapacitorConfig = {
     // 保持 WebView 在软键盘弹出时不重新布局
     // Keep WebView from relayouting when soft keyboard appears
     keyboardDisplayRequiresUserAction: false,
+    // 使用沉浸式模式 / Use immersive mode
+    // allowMixedContent: true,
+    // 状态栏配置 / Status bar configuration
+    statusBar: {
+        style: 'DARK', // 深色状态栏 / Dark status bar
+        backgroundColor: '#020617', // 匹配应用背景色 / Match app background
+    },
   },
 };
 

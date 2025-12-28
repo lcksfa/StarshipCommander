@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import AppWrapper from "./AppWrapper";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGate } from "./components/AuthGate";
@@ -91,7 +92,7 @@ root.render(
     <LanguageProvider>
       <AuthProvider>
         <AuthGate>
-          <App />
+          <AppWrapper />
         </AuthGate>
       </AuthProvider>
     </LanguageProvider>
