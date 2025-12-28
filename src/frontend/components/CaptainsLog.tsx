@@ -115,26 +115,38 @@ const CaptainsLog: React.FC<CaptainsLogProps> = ({ stats, userId }) => {
   const todayIndex = new Date().getDay();
   const mondayIndex = todayIndex === 0 ? 6 : todayIndex - 1; // 调整为周一是 0 / Adjust to Monday is 0
 
-  // 计算周数据 / Calculate week data
-  const weekData = Array(7)
-    .fill(0)
-    .map(() => ({
-      active: false,
-      score: 15, // base height percentage
-    }));
+  // 计算周数据 - 只使用当前展开的周，如果没有展开的则使用当前周
+  // Calculate week data - Only use currently expanded week, or current week if none expanded
+  // 使用 useMemo 确保展开状态变化时重新计算
+  // Use useMemo to recalculate when expanded state changes
+  const weekData = useMemo(() => {
+    const data = Array(7)
+      .fill(0)
+      .map(() => ({
+        active: false,
+        score: 15, // base height percentage
+      }));
 
-  weekGroups.forEach((weekGroup) => {
-    // 防御性检查：确保 logs 存在且是数组 / Defensive check: ensure logs exists and is an array
-    if (weekGroup.logs && Array.isArray(weekGroup.logs)) {
-      weekGroup.logs.forEach((log) => {
-        const d = new Date(log.timestamp);
-        const dayOfWeek = d.getDay();
+    // 找到当前展开的周（优先使用第一个展开的周）
+    // Find the currently expanded week (prefer the first expanded one)
+    const expandedWeek = weekDateGroups.find((wg) => expandedWeeks.has(wg.weekStart)) || weekDateGroups.find((wg) => wg.isCurrentWeek);
+
+    if (expandedWeek) {
+      expandedWeek.dateGroups.forEach((dateGroup) => {
+        const date = new Date(dateGroup.date);
+        const dayOfWeek = date.getDay();
         const adjustedIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 周日(0) 转换为 6，其他减 1
-        weekData[adjustedIndex].active = true;
-        weekData[adjustedIndex].score = Math.max(50, (d.getDate() * 13) % 100);
+
+        // 根据任务数量计算柱形高度 / Calculate bar height based on task count
+        // 基础高度 50%，每个任务增加 10%，最高 100%
+        const taskCount = dateGroup.totalCount;
+        data[adjustedIndex].active = true;
+        data[adjustedIndex].score = Math.min(100, Math.max(50, 50 + taskCount * 10));
       });
     }
-  });
+
+    return data;
+  }, [weekDateGroups, expandedWeeks]);
 
   return (
     <div className="pb-32 md:pb-8 flex flex-col h-full pt-4">
