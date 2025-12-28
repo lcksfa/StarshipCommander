@@ -8,7 +8,7 @@ WORKDIR /app
 # 安装 pnpm
 RUN npm install -g pnpm@10.26.1
 
-# 复制 package 文件
+# 复制 package 文件和 prisma schema
 COPY package.json pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
@@ -29,8 +29,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # 设置构建环境变量
-ENV NODE_ENV production
-ENV BACKEND_BUILD_ONLY true
+ENV NODE_ENV=production
+ENV BACKEND_BUILD_ONLY=true
 
 # 生成 Prisma Client
 RUN pnpm prisma:generate
@@ -52,15 +52,14 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
 
 # 设置生产环境
-ENV NODE_ENV production
-ENV PORT 3001
+ENV NODE_ENV=production
+ENV PORT=3001
 
 # 复制必要文件
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/src/backend/dist ./src/backend/dist
 COPY --from=builder /app/prisma ./prisma
-# 复制所有已安装的 node_modules
 COPY --from=builder /app/node_modules ./node_modules
 
 # 创建日志目录
