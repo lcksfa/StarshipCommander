@@ -58,6 +58,7 @@
     "android:build": "pnpm run build && pnpm run cap:sync:android",
     "android:dev": "concurrently \"pnpm run dev\" \"pnpm run cap:run:android\"",
     "android:release": "pnpm run build && pnpm run cap:build:android",
+    "android:smart-build": "./scripts/build-android.sh",
     "icons:generate": "node scripts/generate-icons.js",
     "icons:install": "pnpm run icons:generate && cp -r public/icons/mipmap-*/ic_*.png android/app/src/main/res/ && cp -r public/icons/web/*.png public/",
     "icons:preview": "echo \"打开浏览器访问: file://$(pwd)/scripts/preview-icon.html\" && open scripts/preview-icon.html",

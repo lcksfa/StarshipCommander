@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     // 配置为局域网服务器地址 / Configure for LAN server address
     // 移动端将从局域网服务器加载应用，而不是打包的资源
     // Mobile app will load from LAN server instead of bundled resources
-    url: 'http://192.168.1.2:3000',
+    url: 'http://192.168.0.3:3000',
     androidScheme: 'https',
     // 开发环境配置：允许连接开发服务器
     // Development configuration: Allow connection to dev server
@@ -19,7 +19,8 @@ const config: CapacitorConfig = {
     // 允许导航到外部 URL
     // Allow navigation to external URLs
     allowNavigation: [
-      'http://192.168.1.2:*',
+      'http://192.168.0.3:*',
+      'http://192.168.1.*:*',
       'http://localhost:*',
     ],
   },
